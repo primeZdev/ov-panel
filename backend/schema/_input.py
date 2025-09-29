@@ -11,3 +11,11 @@ class CreateUser(BaseModel):
 
 class UpdateUser(BaseModel):
     expiry_date: Optional[date]
+
+
+class NodeCreate(BaseModel):
+    name: str = Field(max_length=10)
+    address: str
+    port: int
+    key: str = Field(min_length=10, max_length=40)
+    status: bool = Field(default=True)

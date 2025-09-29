@@ -1,4 +1,3 @@
-from typing import List
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
@@ -13,6 +12,10 @@ from operations.user_management import (
     download_ovpn_file,
 )
 from auth.auth import get_current_user
+from node.task import (
+    create_user_on_all_nodes,
+    delete_user_on_all_nodes,
+)
 
 router = APIRouter(prefix="/user", tags=["Users"])
 
@@ -30,7 +33,7 @@ async def get_all_users(
     )
 
 
-@router.get("/dwonload/ovpn/{name}")
+@router.get("/download/ovpn/{name}")
 async def download_ovpn(
     name: str,
     user: dict = Depends(get_current_user),
@@ -64,6 +67,7 @@ async def create_user(
             success=False, msg="Server error while creating user", data=None
         )
 
+    await create_user_on_all_nodes(request.name, db)
     crud.create_user(db, request, "test name")
     return ResponseModel(
         success=True, msg="User created successfully", data=request.name
@@ -87,5 +91,7 @@ async def delete_user(
     server_result = await delete_user_on_server(name)
     if server_result == "not_found":
         return ResponseModel(success=False, msg="User not found on server", data=None)
+
+    await delete_user_on_all_nodes(name, db)
     db_result = crud.delete_user(db, name)
     return ResponseModel(success=True, msg="User deleted successfully", data=db_result)
