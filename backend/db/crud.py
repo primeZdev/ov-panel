@@ -4,8 +4,8 @@ from datetime import datetime
 
 from logger import logger
 from schema.output import Users as ShowUsers
-from schema._input import CreateUser, UpdateUser
-from .models import User, Admin
+from schema._input import CreateUser, UpdateUser, NodeCreate
+from .models import User, Admin, Node
 
 
 def get_all_users(db: Session):
@@ -91,3 +91,51 @@ def it_is_admin(db: Session, username: str):
     if not admin:
         return False
     return admin
+
+
+# nodes crud
+def get_all_nodes(db: Session):
+    nodes = db.query(Node).all()
+    return nodes
+
+
+def get_node_by_address(db: Session, address: str):
+    return db.query(Node).filter(Node.address == address).first()
+
+
+def create_node(db: Session, request: NodeCreate):
+    new_node = Node(
+        name=request.name,
+        address=request.address,
+        port=request.port,
+        key=request.key,
+        status=request.status,
+    )
+
+    db.add(new_node)
+    db.commit()
+    db.refresh(new_node)
+    return new_node
+
+
+def update_node(db: Session, address: str, request: NodeCreate):
+    node = db.query(Node).filter(Node.address == address).first()
+    if not node:
+        raise HTTPException(status_code=404, detail="Node not found")
+
+    node.name = request.name
+    node.port = request.port
+    node.key = request.key
+    node.status = request.status
+    db.commit()
+    db.refresh(node)
+    return node
+
+
+def delete_node(db: Session, id: int):
+    node = db.query(Node).filter(Node.id == id).first()
+    if not node:
+        raise HTTPException(status_code=404, detail="Node not found")
+    db.delete(node)
+    db.commit()
+    return {"detail": "Node deleted successfully"}
