@@ -28,4 +28,5 @@ class Node(Base):
     name: Mapped[str] = mapped_column()
     address: Mapped[str] = mapped_column()
     port: Mapped[int] = mapped_column()
+    key: Mapped[str] = mapped_column(nullable=False)
     status: Mapped[bool] = mapped_column(default=True)
