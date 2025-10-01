@@ -4,8 +4,8 @@ from datetime import datetime
 
 from logger import logger
 from schema.output import Users as ShowUsers
-from schema._input import CreateUser, UpdateUser, NodeCreate
-from .models import User, Admin, Node
+from schema._input import CreateUser, UpdateUser, NodeCreate, SettingsUpdate
+from .models import User, Admin, Node, Settings
 
 
 def get_all_users(db: Session):
@@ -107,6 +107,7 @@ def create_node(db: Session, request: NodeCreate):
     new_node = Node(
         name=request.name,
         address=request.address,
+        tunnel_address=request.tunnel_address,
         port=request.port,
         key=request.key,
         status=request.status,
@@ -124,6 +125,7 @@ def update_node(db: Session, address: str, request: NodeCreate):
         raise HTTPException(status_code=404, detail="Node not found")
 
     node.name = request.name
+    node.tunnel_address = request.tunnel_address
     node.port = request.port
     node.key = request.key
     node.status = request.status
@@ -139,3 +141,26 @@ def delete_node(db: Session, id: int):
     db.delete(node)
     db.commit()
     return {"detail": "Node deleted successfully"}
+
+
+# settings crud
+def get_settings(db: Session):
+    settings = db.query(Settings).first()
+    if not settings:
+        settings = Settings(port=1194)
+        settings.protocol = "tcp"
+        db.add(settings)
+        db.commit()
+        db.refresh(settings)
+
+    return settings
+
+
+def update_settings(db: Session, request: SettingsUpdate):
+    settings = db.query(Settings).first()
+
+    settings.port = request.port
+    settings.tunnel_address = request.tunnel_address
+    db.commit()
+    db.refresh(settings)
+    return settings
