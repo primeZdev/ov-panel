@@ -16,6 +16,13 @@ class UpdateUser(BaseModel):
 class NodeCreate(BaseModel):
     name: str = Field(max_length=10)
     address: str
+    tunnel_address: str = Field(default=None)
     port: int
     key: str = Field(min_length=10, max_length=40)
     status: bool = Field(default=True)
+
+
+class SettingsUpdate(BaseModel):
+    tunnel_address: Optional[str] = None
+    port: Optional[int]
+    protocol: Optional[str]
