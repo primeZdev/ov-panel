@@ -108,6 +108,8 @@ def create_node(db: Session, request: NodeCreate):
         name=request.name,
         address=request.address,
         tunnel_address=request.tunnel_address,
+        ovpn_port=request.ovpn_port,
+        protocol=request.protocol,
         port=request.port,
         key=request.key,
         status=request.status,
@@ -126,6 +128,8 @@ def update_node(db: Session, address: str, request: NodeCreate):
 
     node.name = request.name
     node.tunnel_address = request.tunnel_address
+    node.ovpn_port = request.ovpn_port
+    node.protocol = request.protocol
     node.port = request.port
     node.key = request.key
     node.status = request.status

@@ -6,14 +6,34 @@ from logger import logger
 class NodeRequests:
     """Handles requests to the node API."""
 
-    def __init__(self, address: str, port: int, api_key: str):
+    def __init__(
+        self,
+        address: str,
+        port: int,
+        api_key: str,
+        tunnel_addres: str = "ovpanel.com",
+        protocol: str = "tcp",
+        ovpn_port: int = 1194,
+        set_new_setting: bool = False,
+    ):
         self.address = f"{address}:{port}"
         self.headers = {"key": api_key}
+        self.tunnel_addres = tunnel_addres
+        self.protocol = protocol
+        self.ovpn_port = ovpn_port
+        self.set_new_setting = set_new_setting
 
     def check_node(self) -> bool:
+        """Checks the node status and sets new settings if necesary."""
         api = f"http://{self.address}/sync/get-status"
         try:
-            response = requests.get(api, headers=self.headers).json()
+            data = {
+                "tunnel_address": self.tunnel_addres,
+                "protocol": self.protocol,
+                "ovpn_port": self.ovpn_port,
+                "set_new_setting": self.set_new_setting,
+            }
+            response = requests.post(api, headers=self.headers, json=data).json()
             if response.get("success"):
                 return True
             else:
