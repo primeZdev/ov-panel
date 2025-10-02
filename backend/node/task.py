@@ -8,7 +8,15 @@ from db import crud
 
 
 async def add_node_handler(request: NodeCreate, db: Session) -> bool:
-    new_node = NodeRequests(request.address, request.port, request.key)
+    new_node = NodeRequests(
+        request.address,
+        request.port,
+        request.key,
+        request.tunnel_address,
+        request.protocol,
+        request.ovpn_port,
+        request.set_new_setting,
+    )
     if new_node.check_node():
         crud.create_node(db, request)
         logger.info(f"Node added successfully: {request.address}:{request.port}")
@@ -37,6 +45,8 @@ async def list_nodes_handler(db: Session) -> list:
     for node in nodes:
         node_info = {
             "address": node.address,
+            "tunnel-address": node.tunnel_address,
+            "ovpn_port": node.ovpn_port,
             "port": node.port,
             "status": "active" if node.status else "inactive",
         }

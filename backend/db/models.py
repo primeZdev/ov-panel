@@ -28,6 +28,8 @@ class Node(Base):
     name: Mapped[str] = mapped_column()
     address: Mapped[str] = mapped_column()
     tunnel_address: Mapped[str] = mapped_column(nullable=True)
+    protocol: Mapped[str] = mapped_column()
+    ovpn_port: Mapped[int] = mapped_column()
     port: Mapped[int] = mapped_column()
     key: Mapped[str] = mapped_column(nullable=False)
     status: Mapped[bool] = mapped_column(default=True)
