@@ -9,6 +9,7 @@ class Setting(BaseSettings):
     URLPATH: str = "dashboard"
     PORT: int = 9000
     DEBUG: str = "WARNING"
+    DOCS: Optional[str] = None
     SSL_KEYFILE: Optional[str] = None
     SSL_CERTFILE: Optional[str] = None
 

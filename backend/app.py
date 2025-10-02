@@ -8,7 +8,7 @@ from config import config
 from routers import all_routers
 
 
-api = FastAPI(docs_url="/docs")
+api = FastAPI(docs_url=config.DOCS)
 
 
 def start_scheduler():
