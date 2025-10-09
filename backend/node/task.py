@@ -44,9 +44,11 @@ async def list_nodes_handler(db: Session) -> list:
     nodes = crud.get_all_nodes(db)
     for node in nodes:
         node_info = {
+            "name": node.name,
             "address": node.address,
             "tunnel-address": node.tunnel_address,
             "ovpn_port": node.ovpn_port,
+            "protocol": node.protocol,
             "port": node.port,
             "status": "active" if node.status else "inactive",
         }
