@@ -8,6 +8,7 @@ from schema.output import ResponseModel
 from schema._input import NodeCreate
 from node.task import (
     add_node_handler,
+    update_node_handler,
     delete_node_handler,
     download_ovpn_client_from_node,
     list_nodes_handler,
@@ -27,6 +28,20 @@ async def add_node(
     return ResponseModel(
         success=new_node,
         msg="Node added successfully" if new_node else "Failed to add node",
+    )
+
+
+@router.put("/update/{address}", response_model=ResponseModel)
+async def update_node(
+    address: str,
+    request: NodeCreate,
+    db: Session = Depends(get_db),
+    user: dict = Depends(get_current_user),
+):
+    result = await update_node_handler(address, request, db)
+    return ResponseModel(
+        success=result,
+        msg="Node updated successfully" if result else "Failed to update node",
     )
 
 

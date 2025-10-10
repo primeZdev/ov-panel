@@ -26,6 +26,13 @@ async def add_node_handler(request: NodeCreate, db: Session) -> bool:
         return False
 
 
+async def update_node_handler(address: str, request: NodeCreate, db: Session) -> None:
+    """Update a node"""
+    crud.update_node(db, address, request)
+    logger.info(f"Node updated successfully: {address}")
+    return True
+
+
 async def delete_node_handler(address: str, db: Session) -> bool:
     """Delete a node"""
     node = crud.get_node_by_address(db, address)
@@ -100,7 +107,6 @@ async def download_ovpn_client_from_node(
     result = NodeRequests(
         address=node.address, port=node.port, api_key=node.key
     ).download_ovpn_client(f"{name}-{node.name}")
-
     if result:
         logger.info(
             f"OVPN client downloaded for user '{name}-{node.name}' on node {node.address}:{node.port}"
