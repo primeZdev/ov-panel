@@ -10,6 +10,7 @@ class CreateUser(BaseModel):
 
 
 class UpdateUser(BaseModel):
+    name: str
     expiry_date: Optional[date]
 
 

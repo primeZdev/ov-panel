@@ -68,7 +68,7 @@ async def create_user(
         )
 
     await create_user_on_all_nodes(request.name, db)
-    crud.create_user(db, request, "test name")
+    crud.create_user(db, request, "owner")
     return ResponseModel(
         success=True, msg="User created successfully", data=request.name
     )
