@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 import uvicorn
@@ -6,9 +7,22 @@ import uvicorn
 from operations.daily_checks import check_user_expiry_date
 from config import config
 from routers import all_routers
+from . import __version__
 
 
-api = FastAPI(docs_url=config.DOCS)
+api = FastAPI(
+    title="OVPanel API",
+    description="API for managing OVPanel",
+    version=__version__,
+    docs_url=config.DOCS,
+)
+api.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 def start_scheduler():
