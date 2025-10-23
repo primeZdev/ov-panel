@@ -7,14 +7,14 @@ import uvicorn
 from operations.daily_checks import check_user_expiry_date
 from config import config
 from routers import all_routers
-from . import __version__
+from version import __version__
 
 
 api = FastAPI(
     title="OVPanel API",
     description="API for managing OVPanel",
     version=__version__,
-    docs_url=config.DOCS,
+    docs_url="/doc" if config.DOC else None,
 )
 api.add_middleware(
     CORSMiddleware,
