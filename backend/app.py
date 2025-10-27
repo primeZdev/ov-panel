@@ -4,10 +4,10 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 import uvicorn
 
-from operations.daily_checks import check_user_expiry_date
-from config import config
-from routers import all_routers
-from version import __version__
+from backend.operations.daily_checks import check_user_expiry_date
+from backend.config import config
+from backend.routers import all_routers
+from backend.version import __version__
 
 
 api = FastAPI(
@@ -45,13 +45,3 @@ async def startup_event():
 
 for router in all_routers:
     api.include_router(prefix=f"/{config.URLPATH}", router=router)
-
-if __name__ == "__main__":
-    uvicorn.run(
-        "app:api",
-        host="0.0.0.0",
-        port=config.PORT,
-        reload=True,
-        ssl_keyfile=config.SSL_KEYFILE,
-        ssl_certfile=config.SSL_CERTFILE,
-    )

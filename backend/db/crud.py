@@ -2,9 +2,9 @@ from sqlalchemy.orm import Session
 from fastapi import HTTPException
 from datetime import datetime
 
-from logger import logger
-from schema.output import Users as ShowUsers
-from schema._input import CreateUser, UpdateUser, NodeCreate, SettingsUpdate
+from backend.logger import logger
+from backend.schema.output import Users as ShowUsers
+from backend.schema._input import CreateUser, UpdateUser, NodeCreate, SettingsUpdate
 from .models import User, Admin, Node, Settings
 
 

@@ -1,6 +1,6 @@
-from logger import logger
-from db import crud
-from db.engine import get_db
+from backend.logger import logger
+from backend.db import crud
+from backend.db.engine import get_db
 from .user_management import delete_user_on_server
 
 import asyncio

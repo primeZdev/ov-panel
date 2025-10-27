@@ -1,8 +1,8 @@
 import pexpect
 import re
 
-from logger import logger
-from schema._input import SettingsUpdate
+from backend.logger import logger
+from backend.schema._input import SettingsUpdate
 
 
 def change_config(request: SettingsUpdate) -> bool:

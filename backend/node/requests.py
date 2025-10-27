@@ -1,6 +1,6 @@
 import requests
 from fastapi.responses import Response
-from logger import logger
+from backend.logger import logger
 
 
 class NodeRequests:

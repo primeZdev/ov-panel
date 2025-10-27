@@ -2,11 +2,11 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
-from auth.auth import get_current_user
-from db.engine import get_db
-from schema.output import ResponseModel
-from schema._input import NodeCreate
-from node.task import (
+from backend.auth.auth import get_current_user
+from backend.db.engine import get_db
+from backend.schema.output import ResponseModel
+from backend.schema._input import NodeCreate
+from backend.node.task import (
     add_node_handler,
     update_node_handler,
     delete_node_handler,

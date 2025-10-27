@@ -2,7 +2,7 @@ import pexpect
 import re
 import os
 
-from logger import logger
+from backend.logger import logger
 
 
 script_path = "/root/openvpn-install.sh"

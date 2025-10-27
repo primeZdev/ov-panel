@@ -2,10 +2,10 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from typing import List
 
-from db.engine import get_db
-from db import crud
-from schema.output import Admins, ResponseModel
-from auth.auth import get_current_user
+from backend.db.engine import get_db
+from backend.db import crud
+from backend.schema.output import Admins, ResponseModel
+from backend.auth.auth import get_current_user
 
 
 router = APIRouter(prefix="/admin", tags=["Admins"])

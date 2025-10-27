@@ -2,17 +2,17 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
-from schema.output import ResponseModel, Users
-from schema._input import CreateUser, UpdateUser
-from db.engine import get_db
-from db import crud
-from operations.user_management import (
+from backend.schema.output import ResponseModel, Users
+from backend.schema._input import CreateUser, UpdateUser
+from backend.db.engine import get_db
+from backend.db import crud
+from backend.operations.user_management import (
     create_user_on_server,
     delete_user_on_server,
     download_ovpn_file,
 )
-from auth.auth import get_current_user
-from node.task import (
+from backend.auth.auth import get_current_user
+from backend.node.task import (
     create_user_on_all_nodes,
     delete_user_on_all_nodes,
 )

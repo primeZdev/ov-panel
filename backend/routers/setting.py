@@ -1,13 +1,13 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from db.engine import get_db
-from db import crud
-from auth.auth import get_current_user
-from operations.server_info import get_server_info
-from schema._input import SettingsUpdate
-from schema.output import Settings, ServerInfo, ResponseModel
-from operations.core_setting import change_config
+from backend.db.engine import get_db
+from backend.db import crud
+from backend.auth.auth import get_current_user
+from backend.operations.server_info import get_server_info
+from backend.schema._input import SettingsUpdate
+from backend.schema.output import Settings, ServerInfo, ResponseModel
+from backend.operations.core_setting import change_config
 
 router = APIRouter(prefix="/settings", tags=["Panel Settings"])
 

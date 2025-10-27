@@ -4,9 +4,9 @@ from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
 from jose import JWTError, jwt
 from passlib.context import CryptContext
-from db.engine import get_db
-from config import config
-from db import crud
+from backend.db.engine import get_db
+from backend.config import config
+from backend.db import crud
 
 
 SECRET_KEY = "njQdMj0mCjW1TmFHx4eXlvdp3m7Klbtr3wFs0+5Rra9w4Fahd0U2R9Ezorh3SGu2"

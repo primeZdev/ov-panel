@@ -1,10 +1,10 @@
 from fastapi.responses import Response
 from sqlalchemy.orm import Session
 
-from logger import logger
-from schema._input import NodeCreate
+from backend.logger import logger
+from backend.schema._input import NodeCreate
 from .requests import NodeRequests
-from db import crud
+from backend.db import crud
 
 
 async def add_node_handler(request: NodeCreate, db: Session) -> bool:
