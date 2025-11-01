@@ -10,4 +10,23 @@ class CreateUser(BaseModel):
 
 
 class UpdateUser(BaseModel):
+    name: str
     expiry_date: Optional[date]
+
+
+class NodeCreate(BaseModel):
+    name: str = Field(max_length=10)
+    address: str
+    tunnel_address: str = Field(default=None)
+    protocol: str = Field(default="tcp")
+    ovpn_port: int = Field(default=1194)
+    port: int
+    key: str = Field(min_length=10, max_length=40)
+    status: bool = Field(default=True)
+    set_new_setting: bool = Field(default=False)
+
+
+class SettingsUpdate(BaseModel):
+    tunnel_address: Optional[str] = None
+    port: Optional[int]
+    protocol: Optional[str]

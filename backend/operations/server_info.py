@@ -1,8 +1,9 @@
 import psutil
 import time
 from fastapi import HTTPException
-from logger import logger
-from schema.output import ServerInfo, ResponseModel
+
+from backend.logger import logger
+from backend.schema.output import ServerInfo, ResponseModel
 
 
 async def get_server_info() -> ServerInfo:

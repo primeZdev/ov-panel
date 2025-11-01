@@ -33,6 +33,15 @@ class ServerInfo(BaseModel):
         from_attributes = True
 
 
+class Settings(BaseModel):
+    tunnel_address: Optional[str] = None
+    port: int
+    protocol: Optional[str]
+
+    class Config:
+        from_attributes = True
+
+
 class Admins(BaseModel):
     username: str
 

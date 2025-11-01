@@ -2,10 +2,10 @@ from sqlalchemy.orm import Session
 from fastapi import HTTPException
 from datetime import datetime
 
-from logger import logger
-from schema.output import Users as ShowUsers
-from schema._input import CreateUser, UpdateUser
-from .models import User, Admin
+from backend.logger import logger
+from backend.schema.output import Users as ShowUsers
+from backend.schema._input import CreateUser, UpdateUser, NodeCreate, SettingsUpdate
+from .models import User, Admin, Node, Settings
 
 
 def get_all_users(db: Session):
@@ -91,3 +91,80 @@ def it_is_admin(db: Session, username: str):
     if not admin:
         return False
     return admin
+
+
+# nodes crud
+def get_all_nodes(db: Session):
+    nodes = db.query(Node).all()
+    return nodes
+
+
+def get_node_by_address(db: Session, address: str):
+    return db.query(Node).filter(Node.address == address).first()
+
+
+def create_node(db: Session, request: NodeCreate):
+    new_node = Node(
+        name=request.name,
+        address=request.address,
+        tunnel_address=request.tunnel_address,
+        ovpn_port=request.ovpn_port,
+        protocol=request.protocol,
+        port=request.port,
+        key=request.key,
+        status=request.status,
+    )
+
+    db.add(new_node)
+    db.commit()
+    db.refresh(new_node)
+    return new_node
+
+
+def update_node(db: Session, address: str, request: NodeCreate):
+    node = db.query(Node).filter(Node.address == address).first()
+    if not node:
+        raise HTTPException(status_code=404, detail="Node not found")
+
+    node.name = request.name
+    node.tunnel_address = request.tunnel_address
+    node.ovpn_port = request.ovpn_port
+    node.protocol = request.protocol
+    node.port = request.port
+    node.key = request.key
+    node.status = request.status
+    db.commit()
+    db.refresh(node)
+    return node
+
+
+def delete_node(db: Session, id: int):
+    node = db.query(Node).filter(Node.id == id).first()
+    if not node:
+        raise HTTPException(status_code=404, detail="Node not found")
+    db.delete(node)
+    db.commit()
+    return {"detail": "Node deleted successfully"}
+
+
+# settings crud
+def get_settings(db: Session):
+    settings = db.query(Settings).first()
+    if not settings:
+        settings = Settings(port=1194)
+        settings.protocol = "tcp"
+        db.add(settings)
+        db.commit()
+        db.refresh(settings)
+
+    return settings
+
+
+def update_settings(db: Session, request: SettingsUpdate):
+    settings = db.query(Settings).first()
+
+    settings.port = request.port
+    settings.tunnel_address = request.tunnel_address
+    db.commit()
+    db.refresh(settings)
+    return settings
