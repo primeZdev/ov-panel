@@ -13,9 +13,7 @@ router = APIRouter(prefix="/settings", tags=["Panel Settings"])
 
 
 @router.get("/", response_model=ResponseModel)
-async def get_settings(
-    db: Session = Depends(get_db), user: str = Depends(get_current_user)
-):
+async def get_settings(db: Session = Depends(get_db), user: str = Depends(get_current_user)):
     settings = crud.get_settings(db)
     return ResponseModel(
         success=True,

@@ -68,28 +68,20 @@ async def create_user_on_all_nodes(name: str, db: Session):
     nodes = crud.get_all_nodes(db)
     if nodes:
         for node in nodes:
-            node_requests = NodeRequests(
-                address=node.address, port=node.port, api_key=node.key
-            )
+            node_requests = NodeRequests(address=node.address, port=node.port, api_key=node.key)
             node_status = node_requests.check_node()
             if node_status:
                 node_requests.create_user(f"{name}-{node.name}")
-                logger.info(
-                    f"User '{name}-{node.name}' created on node {node.address}:{node.port}"
-                )
+                logger.info(f"User '{name}-{node.name}' created on node {node.address}:{node.port}")
             else:
-                logger.warning(
-                    f"Failed to create user '{name}-{node.name}' on node {node.address}:{node.port}"
-                )
+                logger.warning(f"Failed to create user '{name}-{node.name}' on node {node.address}:{node.port}")
 
 
 async def get_node_status_handler(address: str, db: Session):
     """Get the status of a node"""
     node = crud.get_node_by_address(db, address)
     if node:
-        node_status = NodeRequests(
-            address=node.address, port=node.port, api_key=node.key
-        ).get_node_info()
+        node_status = NodeRequests(address=node.address, port=node.port, api_key=node.key).get_node_info()
         return {
             "address": node.address,
             "port": node.port,
@@ -99,18 +91,12 @@ async def get_node_status_handler(address: str, db: Session):
     return None
 
 
-async def download_ovpn_client_from_node(
-    name: str, node_address: str, db: Session
-) -> Response | None:
+async def download_ovpn_client_from_node(name: str, node_address: str, db: Session) -> Response | None:
     """Download OVPN client from a node"""
     node = crud.get_node_by_address(db, node_address)
-    result = NodeRequests(
-        address=node.address, port=node.port, api_key=node.key
-    ).download_ovpn_client(f"{name}-{node.name}")
+    result = NodeRequests(address=node.address, port=node.port, api_key=node.key).download_ovpn_client(f"{name}-{node.name}")
     if result:
-        logger.info(
-            f"OVPN client downloaded for user '{name}-{node.name}' on node {node.address}:{node.port}"
-        )
+        logger.info(f"OVPN client downloaded for user '{name}-{node.name}' on node {node.address}:{node.port}")
         return result
     return None
 
@@ -120,16 +106,10 @@ async def delete_user_on_all_nodes(name: str, db: Session):
     nodes = crud.get_all_nodes(db)
     if nodes:
         for node in nodes:
-            node_requests = NodeRequests(
-                address=node.address, port=node.port, api_key=node.key
-            )
+            node_requests = NodeRequests(address=node.address, port=node.port, api_key=node.key)
             node_status = node_requests.check_node()
             if node_status:
                 node_requests.delete_user(f"{name}-{node.name}")
-                logger.info(
-                    f"User '{name}-{node.name}' deleted on node {node.address}:{node.port}"
-                )
+                logger.info(f"User '{name}-{node.name}' deleted on node {node.address}:{node.port}")
             else:
-                logger.warning(
-                    f"Failed to delete user '{name}-{node.name}' on node {node.address}:{node.port}"
-                )
+                logger.warning(f"Failed to delete user '{name}-{node.name}' on node {node.address}:{node.port}")

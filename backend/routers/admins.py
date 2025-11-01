@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from typing import List
 
 from backend.db.engine import get_db
 from backend.db import crud
@@ -12,9 +11,7 @@ router = APIRouter(prefix="/admin", tags=["Admins"])
 
 
 @router.get("/all", response_model=ResponseModel)
-async def get_all_admins(
-    db: Session = Depends(get_db), user: dict = Depends(get_current_user)
-):
+async def get_all_admins(db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
     result = crud.get_all_admins(db)
     return ResponseModel(
         success=True,

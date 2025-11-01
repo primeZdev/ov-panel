@@ -1,3 +1,6 @@
+[tool.ruff]
+line-length = 128
+
 [project]
 name = "ov-panel"
 version = "1.0.0"

@@ -50,9 +50,7 @@ class NodeRequests:
             if response.get("success"):
                 return response.get("data")
             else:
-                logger.error(
-                    f"Failed to get node info on {self.address}: {response.get('msg')}"
-                )
+                logger.error(f"Failed to get node info on {self.address}: {response.get('msg')}")
                 return {}
         except Exception as e:
             logger.error(f"Error getting node info on {self.address}: {e}")
@@ -66,9 +64,7 @@ class NodeRequests:
             if response.get("success"):
                 return True
             else:
-                logger.error(
-                    f"Failed to create user on node {self.address}: {response.get('msg')}"
-                )
+                logger.error(f"Failed to create user on node {self.address}: {response.get('msg')}")
                 return False
         except Exception as e:
             logger.error(f"Error creating user on node {self.address}: {e}")
@@ -85,9 +81,7 @@ class NodeRequests:
                 return Response(
                     content=response.content,
                     media_type="application/x-openvpn-profile",
-                    headers={
-                        "Content-Disposition": f"attachment; filename={name}.ovpn"
-                    },
+                    headers={"Content-Disposition": f"attachment; filename={name}.ovpn"},
                 )
         except Exception as e:
             logger.error(f"Error downloading OVPN client from node {self.address}: {e}")
@@ -101,9 +95,7 @@ class NodeRequests:
             if response.get("success"):
                 return True
             else:
-                logger.error(
-                    f"Failed to delete user on node {self.address}: {response.get('msg')}"
-                )
+                logger.error(f"Failed to delete user on node {self.address}: {response.get('msg')}")
                 return False
         except Exception as e:
             logger.error(f"Error deleting user on node {self.address}: {e}")

@@ -1,6 +1,5 @@
 import psutil
 import time
-from fastapi import HTTPException
 
 from backend.logger import logger
 from backend.schema.output import ServerInfo, ResponseModel

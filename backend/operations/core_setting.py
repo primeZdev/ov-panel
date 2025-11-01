@@ -11,9 +11,7 @@ def change_config(request: SettingsUpdate) -> bool:
     try:
         with open(setting_file, "r") as file:
             config = file.read()
-        config = re.sub(
-            r"^port\s+\d+", f"port {request.port}", config, flags=re.MULTILINE
-        )
+        config = re.sub(r"^port\s+\d+", f"port {request.port}", config, flags=re.MULTILINE)
         config = re.sub(
             r"^proto\s+\w+",
             f"proto {request.protocol}",
@@ -63,9 +61,7 @@ def restart_openvpn() -> None:
     try:
         logger.info("Restarting OpenVPN service...")
         # Use pexpect to restart the OpenVPN service
-        child = pexpect.spawn(
-            "systemctl restart openvpn-server@server", encoding="utf-8"
-        )
+        child = pexpect.spawn("systemctl restart openvpn-server@server", encoding="utf-8")
         child.expect(pexpect.EOF)
         logger.info("OpenVPN service restarted successfully.")
     except Exception as e:

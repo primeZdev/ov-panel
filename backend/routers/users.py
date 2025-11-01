@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
@@ -21,9 +21,7 @@ router = APIRouter(prefix="/user", tags=["Users"])
 
 
 @router.get("/all", response_model=ResponseModel)
-async def get_all_users(
-    db: Session = Depends(get_db), user: dict = Depends(get_current_user)
-):
+async def get_all_users(db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
     all_users = crud.get_all_users(db)
     users_list = [Users.from_orm(user) for user in all_users]
     return ResponseModel(
@@ -57,21 +55,15 @@ async def create_user(
 ):
     check_user = crud.get_user_by_name(db, request.name)
     if check_user is not None:
-        return ResponseModel(
-            success=False, msg="User with this name already exists", data=None
-        )
+        return ResponseModel(success=False, msg="User with this name already exists", data=None)
 
     server_result = create_user_on_server(request.name, request.expiry_date)
     if not server_result:
-        return ResponseModel(
-            success=False, msg="Server error while creating user", data=None
-        )
+        return ResponseModel(success=False, msg="Server error while creating user", data=None)
 
     await create_user_on_all_nodes(request.name, db)
     crud.create_user(db, request, "owner")
-    return ResponseModel(
-        success=True, msg="User created successfully", data=request.name
-    )
+    return ResponseModel(success=True, msg="User created successfully", data=request.name)
 
 
 @router.put("/update")
@@ -85,9 +77,7 @@ async def update_user(
 
 
 @router.delete("/delete/{name}")
-async def delete_user(
-    name: str, db: Session = Depends(get_db), user: dict = Depends(get_current_user)
-):
+async def delete_user(name: str, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
     server_result = await delete_user_on_server(name)
     if server_result == "not_found":
         return ResponseModel(success=False, msg="User not found on server", data=None)

@@ -1,6 +1,7 @@
 import os
 import requests
-import pexpect, sys
+import sys
+import pexpect
 import subprocess
 import shutil
 from colorama import Fore, Style
@@ -12,9 +13,7 @@ def install_ovpanel():
             ["wget", "https://git.io/vpn", "-O", "/root/openvpn-install.sh"], check=True
         )  # thanks to Nyr for ovpn installation script <3 https://github.com/Nyr/openvpn-install
 
-        bash = pexpect.spawn(
-            "bash /root/openvpn-install.sh", encoding="utf-8", timeout=60
-        )
+        bash = pexpect.spawn("bash /root/openvpn-install.sh", encoding="utf-8", timeout=60)
         subprocess.run("clear")
         print("Please wait while the prerequisites are installed...")
 
@@ -76,9 +75,7 @@ def install_ovpanel():
         menu()
 
     except Exception as e:
-        print(
-            Fore.RED + "Error occurred during installation: " + str(e) + Style.RESET_ALL
-        )
+        print(Fore.RED + "Error occurred during installation: " + str(e) + Style.RESET_ALL)
         input("Press Enter to return to the menu...")
         menu()
 
@@ -159,22 +156,13 @@ def uninstall_ovpanel():
 
         bash.expect("OpenVPN removed!")
         os.remove("/etc/systemd/system/ov-panel.service")
-        print(
-            Fore.GREEN
-            + "OV-Panel uninstallation completed successfully!"
-            + Style.RESET_ALL
-        )
+        print(Fore.GREEN + "OV-Panel uninstallation completed successfully!" + Style.RESET_ALL)
         deactivate_ovpanel()
         input("Press Enter to return to the menu...")
         menu()
 
     except Exception as e:
-        print(
-            Fore.RED
-            + "Error occurred during uninstallation: "
-            + str(e)
-            + Style.RESET_ALL
-        )
+        print(Fore.RED + "Error occurred during uninstallation: " + str(e) + Style.RESET_ALL)
         input("Press Enter to return to the menu...")
         menu()
 

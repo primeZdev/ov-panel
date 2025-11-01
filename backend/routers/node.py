@@ -1,5 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
-from fastapi.responses import FileResponse
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from backend.auth.auth import get_current_user
@@ -82,9 +81,7 @@ async def download_ovpn_client(
     db: Session = Depends(get_db),
     user: dict = Depends(get_current_user),
 ):
-    response = await download_ovpn_client_from_node(
-        db=db, node_address=address, name=name
-    )
+    response = await download_ovpn_client_from_node(db=db, node_address=address, name=name)
     if response:
         return response
     else:

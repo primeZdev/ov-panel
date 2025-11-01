@@ -44,9 +44,7 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
 
 
 @router.post("/login")
-async def login(
-    form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)
-):
+async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     admin = authenticate_user(db, form_data.username, form_data.password)
     if not admin:
         raise HTTPException(
