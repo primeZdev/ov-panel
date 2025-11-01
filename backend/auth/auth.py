@@ -52,7 +52,7 @@ async def login(
             detail="The username or password is incorrect",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    access_token_expires = timedelta(minutes=config.JWT_ACCESS_TOKEN_EXPIRES)
+    access_token_expires = timedelta(seconds=config.JWT_ACCESS_TOKEN_EXPIRES)
     access_token = create_access_token(
         data={"sub": admin["username"], "role": admin["type"]},
         expires_delta=access_token_expires,
