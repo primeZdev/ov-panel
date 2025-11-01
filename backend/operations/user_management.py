@@ -10,29 +10,55 @@ script_path = "/root/openvpn-install.sh"
 
 def create_user_on_server(name, expiry_date) -> bool:
     try:
-        pexpect.spawn("chmod +x openvpn-install.sh", encoding="utf-8")
-        bash = pexpect.spawn(f"bash {script_path}", encoding="utf-8", timeout=60)
+        if not os.path.exists(script_path):
+            logger.error("script not found on ")
+            return False
 
-        bash.expect("Option:")
+        env = {"PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"}
+        bash = pexpect.spawn(
+            "/usr/bin/bash",
+            [script_path],
+            env=env,
+            encoding="utf-8",
+            timeout=120,
+        )
+
+        bash.expect(r"Option:", timeout=90)
         bash.sendline("1")
 
-        bash.expect("Name:")
+        bash.expect(r"Name:", timeout=90)
         bash.sendline(name)
+        bash.expect(pexpect.EOF, timeout=180)
 
-        bash.expect(pexpect.EOF)
+        bash.close()
         return True
 
-    except pexpect.exceptions.TIMEOUT:
-        logger.error("time out when read exceeds")
+    except pexpect.TIMEOUT:
+        logger.error("Timeout occurred while executing script!")
+        return False
+    except pexpect.EOF:
+        logger.error("Script closed earlier than expected!")
         return False
     except Exception as e:
-        logger.error(f"error when create a user on server: {e}")
+        logger.error(f"Error occurred: {e}")
         return False
 
 
 async def delete_user_on_server(name) -> bool | str:
     try:
-        pexpect.spawn("chmod +x openvpn-install.sh", encoding="utf-8")
+        if not os.path.exists(script_path):
+            logger.error("script not found on ")
+            return False
+
+        env = {"PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"}
+        bash = pexpect.spawn(
+            "/usr/bin/bash",
+            [script_path],
+            env=env,
+            encoding="utf-8",
+            timeout=120,
+        )
+
         bash = pexpect.spawn(f"bash {script_path}", encoding="utf-8", timeout=60)
 
         bash.expect("Option:")
