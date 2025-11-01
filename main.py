@@ -5,7 +5,7 @@ from backend.config import config
 def main():
     uvicorn.run(
         "backend.app:api",
-        host="0.0.0.0",
+        host=str(config.HOST),
         port=config.PORT,
         reload=True,
         ssl_keyfile=config.SSL_KEYFILE,

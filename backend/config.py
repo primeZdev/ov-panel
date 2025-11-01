@@ -7,6 +7,7 @@ class Setting(BaseSettings):
     ADMIN_USERNAME: str
     ADMIN_PASSWORD: str
     URLPATH: str = "dashboard"
+    HOST: str = "0.0.0.0"
     PORT: int = 9000
     DEBUG: str = "WARNING"
     DOC: bool = False
