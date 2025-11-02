@@ -10,11 +10,9 @@ from backend.db import crud
 
 
 ALGORITHM = "HS256"
-
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 router = APIRouter(tags=["Login"])
-
 
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
@@ -38,8 +36,8 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     to_encode = data.copy()
     expire = datetime.now() + (expires_delta or timedelta(hours=24))
     to_encode.update({"exp": expire})
-    return jwt.encode(to_encode, config.JWT_SECRET_KEY, algorithm=ALGORITHM)
 
+    return jwt.encode(to_encode, config.JWT_SECRET_KEY, algorithm=ALGORITHM)
 
 @router.post("/login")
 async def login(
@@ -52,6 +50,7 @@ async def login(
             detail="The username or password is incorrect",
             headers={"WWW-Authenticate": "Bearer"},
         )
+
     access_token_expires = timedelta(seconds=config.JWT_ACCESS_TOKEN_EXPIRES)
     access_token = create_access_token(
         data={"sub": admin["username"], "role": admin["type"]},
@@ -71,6 +70,7 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
     )
     try:
         payload = jwt.decode(token, config.JWT_SECRET_KEY, algorithms=[ALGORITHM])
+  
         username: str = payload.get("sub")
         user_type: str = payload.get("type")
         if username is None:

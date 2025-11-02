@@ -3,6 +3,8 @@ import requests
 import pexpect, sys
 import subprocess
 import shutil
+import secrets
+import base64
 from colorama import Fore, Style
 
 
@@ -13,33 +15,32 @@ def install_ovpanel():
         )  # thanks to Nyr for ovpn installation script <3 https://github.com/Nyr/openvpn-install
 
         bash = pexpect.spawn(
-            "bash /root/openvpn-install.sh", encoding="utf-8", timeout=60
+            "/usr/bin/bash", ["/root/openvpn-install.sh"], encoding="utf-8", timeout=180
         )
-        subprocess.run("clear")
-        print("Please wait while the prerequisites are installed...")
+        print("Running OpenVPN installer...")
 
-        bash.expect("Which IPv4 address should be used")
-        bash.sendline("1")
+        prompts = [
+            (r"Which IPv4 address should be used.*:", "1"),
+            (r"Protocol.*:", "2"),
+            (r"Port.*:", "1194"),
+            (r"Select a DNS server for the clients.*:", "1"),
+            (r"Enter a name for the first client.*:", "first_client"),
+            (r"Press any key to continue...", ""),
+        ]
 
-        bash.expect("Which protocol should OpenVPN use")
-        bash.sendline("2")
+        for pattern, reply in prompts:
+            try:
+                bash.expect(pattern, timeout=10)
+                bash.sendline(reply)
+            except pexpect.TIMEOUT:
+                pass
 
-        bash.expect("What port should OpenVPN listen on")
-        bash.sendline("1194")
+        bash.expect(pexpect.EOF, timeout=None)
+        bash.close()
 
-        bash.expect("Select a DNS server for the clients")
-        bash.sendline("1")
-
-        bash.expect("Enter a name for the first client")
-        bash.sendline("first_client")
-
-        bash.expect("Press any key to continue")
-        bash.sendline("")
-
-        bash.expect("Finished!")
-        subprocess.run("clear")
         shutil.copy(".env.example", ".env")
 
+        # OVPanel configuration prompts
         panel_username = input("OVPanel username: ")
         panel_password = input("OVPanel password: ")
         panel_port = input("OVPanel port number: ")
@@ -50,6 +51,7 @@ def install_ovpanel():
             "ADMIN_PASSWORD": panel_password,
             "PORT": panel_port,
             "URLPATH": panel_path,
+            "SECRET_KEY": generate_jwt_secret_key(),
         }
 
         lines = []
@@ -63,24 +65,30 @@ def install_ovpanel():
         with open(".env", "w") as f:
             f.writelines(lines)
 
+        # migrate database
         subprocess.run(["uv", "sync"], check=True)
         migrate()
 
         print(
-            Fore.GREEN
-            + f"OV-Panel installation completed successfully!\nYou can now access the panel at: http://your-server-ip:{panel_port}/{panel_path}"
-            + Style.RESET_ALL
+            f"OV-Panel installation completed successfully!\nYou can now access the panel at: http://your-server-ip:{panel_port}/{panel_path}"
         )
         run_ovpanel()
         input("Press Enter to return to the menu...")
         menu()
 
     except Exception as e:
-        print(
-            Fore.RED + "Error occurred during installation: " + str(e) + Style.RESET_ALL
-        )
+        print("Error occurred during installation:", e)
         input("Press Enter to return to the menu...")
         menu()
+
+
+def generate_jwt_secret_key(length: int = 64) -> str:
+    """
+    Generate a secure SECRET_KEY for JWT
+    """
+    random_bytes = secrets.token_bytes(length)
+    secret_key = base64.b64encode(random_bytes).decode("utf-8").rstrip("=")
+    return secret_key
 
 
 def update_ovpanel():

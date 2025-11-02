@@ -22,4 +22,4 @@
 
 ---
 
-[![Stargazers over time](https://starchart.cc/primeZdev/ov-panel.svg?variant=adaptive)](https://starchart.cc/primeZdev/ov-panel)
+[![Stargazers over time](https://starchart.cc/primeZdev/ov-panel.svg?background=%23ffffff00&axis=%23ffffff&line=%23ff530a)](https://starchart.cc/primeZdev/ov-panel)
