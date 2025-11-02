@@ -9,6 +9,8 @@ class Setting(BaseSettings):
     URLPATH: str = "dashboard"
     HOST: str = "0.0.0.0"
     PORT: int = 9000
+    SECRET_KEY: str
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
     DEBUG: str = "WARNING"
     DOC: bool = False
     SSL_KEYFILE: Optional[str] = None

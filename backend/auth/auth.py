@@ -9,10 +9,7 @@ from backend.config import config
 from backend.db import crud
 
 
-SECRET_KEY = "njQdMj0mCjW1TmFHx4eXlvdp3m7Klbtr3wFs0+5Rra9w4Fahd0U2R9Ezorh3SGu2"
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
-
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 router = APIRouter(tags=["Login"])
@@ -40,7 +37,7 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     to_encode = data.copy()
     expire = datetime.now() + (expires_delta or timedelta(minutes=15))
     to_encode.update({"exp": expire})
-    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return jwt.encode(to_encode, config.SECRET_KEY, algorithm=ALGORITHM)
 
 
 @router.post("/login")
@@ -54,7 +51,7 @@ async def login(
             detail="The username or password is incorrect",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token_expires = timedelta(minutes=config.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
         data={"sub": admin["username"], "role": admin["type"]},
         expires_delta=access_token_expires,
@@ -72,7 +69,7 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(token, config.SECRET_KEY, algorithms=[ALGORITHM])
         username: str = payload.get("sub")
         user_type: str = payload.get("type")
         if username is None:
