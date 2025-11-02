@@ -3,6 +3,8 @@ import requests
 import pexpect, sys
 import subprocess
 import shutil
+import secrets
+import base64
 from colorama import Fore, Style
 
 
@@ -49,6 +51,7 @@ def install_ovpanel():
             "ADMIN_PASSWORD": panel_password,
             "PORT": panel_port,
             "URLPATH": panel_path,
+            "SECRET_KEY": generate_jwt_secret_key(),
         }
 
         lines = []
@@ -77,6 +80,15 @@ def install_ovpanel():
         print("Error occurred during installation:", e)
         input("Press Enter to return to the menu...")
         menu()
+
+
+def generate_jwt_secret_key(length: int = 64) -> str:
+    """
+    Generate a secure SECRET_KEY for JWT
+    """
+    random_bytes = secrets.token_bytes(length)
+    secret_key = base64.b64encode(random_bytes).decode("utf-8").rstrip("=")
+    return secret_key
 
 
 def update_ovpanel():
