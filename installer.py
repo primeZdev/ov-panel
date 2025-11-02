@@ -51,7 +51,7 @@ def install_ovpanel():
             "ADMIN_PASSWORD": panel_password,
             "PORT": panel_port,
             "URLPATH": panel_path,
-            "SECRET_KEY": generate_jwt_secret_key(),
+            "JWT_SECRET_KEY": generate_jwt_secret_key(),
         }
 
         lines = []
