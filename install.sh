@@ -73,9 +73,8 @@ show_welcome_banner() {
 show_welcome_banner
 
 apt update -y
-apt install -y python3 python3-pip wget curl git -y
-pip3 install --upgrade pip
-pip3 install colorama pexpect requests uuid uv alembic
+apt install -y python3 python3-pip python3-venv wget curl git -y
+pip3 install colorama pexpect requests uuid uv alembic --break-system-packages
 
 if [ ! -d "$INSTALL_DIR" ]; then
     echo -e "${YELLOW}Downloading latest release...${NC}"
