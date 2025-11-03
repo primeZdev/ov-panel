@@ -44,27 +44,32 @@ def create_user_on_server(name, expiry_date) -> bool:
         return False
 
 
-async def delete_user_on_server(name) -> bool | str:
+def delete_user_on_server(name) -> bool | str:
     try:
         if not os.path.exists(script_path):
-            logger.error("script not found on ")
+            logger.error("script not found at %s", script_path)
             return False
 
         env = {"PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"}
         bash = pexpect.spawn(
-            "/usr/bin/bash",
-            [script_path],
-            env=env,
-            encoding="utf-8",
-            timeout=120,
+            "/usr/bin/bash", [script_path], env=env, encoding="utf-8", timeout=120
         )
 
-        bash = pexpect.spawn(f"bash {script_path}", encoding="utf-8", timeout=60)
+        try:
+            bash.expect(r"Option:|Select an option:", timeout=20)
+        except pexpect.TIMEOUT:
+            logger.warning("Did not see main menu prompt, attempting to continue")
 
-        bash.expect("Option:")
         bash.sendline("2")
 
-        bash.expect("Client:")
+        try:
+            bash.expect(
+                r"Select the client to revoke:|Select the client to revoke", timeout=20
+            )
+        except pexpect.TIMEOUT:
+            logger.info("Didn't match full header")
+
+        bash.expect(r"Client:", timeout=20)
         list_output = bash.before
 
         pattern = re.compile(r"\s*(\d+)\)\s*(.+)")
@@ -77,28 +82,39 @@ async def delete_user_on_server(name) -> bool | str:
                 break
 
         if not user_number:
-            logger.error(f"User '{name}' not found for delete!")
-            bash.close()
+            logger.error("User '%s' not found for delete!", name)
+            bash.close(force=True)
             return "not_found"
 
+        logger.info("Revoking user '%s' -> number %s", name, user_number)
         bash.sendline(user_number)
 
-        bash.expect(r"\[y/N\]:", timeout=30)
-        bash.sendline("y")
+        try:
+            bash.expect(
+                r"Confirm .*revocation\?.*\[y/N\]:|Confirm .*revocation\?.*:|Confirm .*revocation\?",
+                timeout=20,
+            )
+            bash.sendline("y")
+        except pexpect.TIMEOUT:
+            logger.warning("Confirmation prompt not seen; trying to continue")
 
-        bash.expect(pexpect.EOF)
+        bash.expect(pexpect.EOF, timeout=120)
+        bash.close()
+
+        # remove local .ovpn file if exists
         file_to_delete = f"/root/{name}.ovpn"
         if os.path.exists(file_to_delete):
             try:
                 os.remove(file_to_delete)
-                return True
+                logger.info("Removed %s", file_to_delete)
             except Exception as e:
-                logger.error(f"Error deleting file {file_to_delete}: {e}")
-                return False
-        else:
-            logger.warning(f"File {file_to_delete} does not exist.")
+                logger.error("Error deleting file %s: %s", file_to_delete, e)
+                return True
+
+        return True
+
     except Exception as e:
-        logger.error("Error in delete_user_on_server:", e)
+        logger.exception("Error in delete_user_on_server: %s", e)
         return False
 
 
