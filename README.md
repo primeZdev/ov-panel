@@ -6,8 +6,6 @@
   # **OV-Panel**
   Free, open-source and lightweight panel for managing **OpenVPN** servers and users.
 
-  ![OV-Panel Screenshot](docs/images/panel.png)
-
   <p align="center">
     <a href="https://primezdev.github.io/ov-doc/" target="_blank">
       <img alt="Get Started" src="https://img.shields.io/badge/Get%20Started-Documentation-brightgreen?style=for-the-badge&logo=readthedocs" />
@@ -17,6 +15,8 @@
     </a>
   </p>
 </div>
+
+  ![OV-Panel Screenshot](docs/images/panel.png)
 
 ---
 
@@ -54,7 +54,7 @@ bash <(curl -s https://raw.githubusercontent.com/primeZdev/ov-panel/main/install
 ```
 ## ⚡ Quick Installation OV-Node
 
-You can install OV-Panel on a fresh Ubuntu/Debian system with a single command:
+You can install OV-Node on a fresh Ubuntu/Debian system with a single command:
 ```bash
 bash <(curl -s https://raw.githubusercontent.com/primeZdev/ov-node/main/install.sh)
 ```
