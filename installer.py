@@ -112,8 +112,9 @@ def show_menu():
     options = [
         ("1", "Install", Fore.GREEN),
         ("2", "Update", Fore.CYAN),
-        ("3", "Uninstall", Fore.RED),
-        ("4", "Exit", Fore.YELLOW),
+        ("3", "Restart", Fore.BLUE),
+        ("4", "Uninstall", Fore.RED),
+        ("5", "Exit", Fore.YELLOW),
     ]
 
     for num, desc, color in options:
@@ -127,11 +128,11 @@ def ask_choice():
         try:
             choice = input(f"{Fore.YELLOW}Enter your choice: {Style.RESET_ALL}")
 
-            if choice in ["1", "2", "3", "4"]:
+            if choice in ["1", "2", "3", "4", "5"]:
                 return choice
             else:
                 print(
-                    f"\n{Fore.RED}Invalid choice. Please enter a number between 1-4{Style.RESET_ALL}"
+                    f"\n{Fore.RED}Invalid choice. Please enter a number between 1-5{Style.RESET_ALL}"
                 )
                 time.sleep(2)
                 show_menu()
@@ -331,11 +332,33 @@ def refresh_panel():
         main_menu()
 
 
+def restart_panel():
+    try:
+        if not os.path.exists("/etc/openvpn") and not os.path.exists("/opt/ov-panel"):
+            print(f"\n{Fore.RED}OV-Panel is not installed.{Style.RESET_ALL}")
+            return
+
+        print(f"\n{Fore.YELLOW}Restarting OV-Panel...{Style.RESET_ALL}")
+        subprocess.run(["systemctl", "restart", "ov-panel"], check=True)
+        time.sleep(3)
+        subprocess.run(["systemctl", "restart", "openvpn-server@server"], check=True)
+        print(f"\n{Fore.GREEN}OV-Panel restarted successfully!{Style.RESET_ALL}")
+        input(f"{Fore.YELLOW}Press Enter to return to menu...{Style.RESET_ALL}")
+        main_menu()
+
+    except Exception as e:
+        print(f"\n{Fore.RED}Failed to restart OV-Panel: {str(e)}{Style.RESET_ALL}")
+        try:
+            input(f"{Fore.YELLOW}Press Enter to return to menu...{Style.RESET_ALL}")
+        except KeyboardInterrupt:
+            print(f"\n\n{Fore.GREEN}Thank you for using OV-Panel!{Style.RESET_ALL}\n")
+            sys.exit(0)
+        main_menu()
+
+
 def remove_panel():
     try:
-        if not os.path.exists("/etc/openvpn/server.conf") and not os.path.exists(
-            "/etc/systemd/system/ov-panel.service"
-        ):
+        if not os.path.exists("/etc/openvpn") and not os.path.exists("/opt/ov-panel"):
             subprocess.run("clear")
             print(
                 f"\n{Fore.YELLOW}OV-Panel is not installed on your system.{Style.RESET_ALL}"
@@ -469,8 +492,10 @@ def main_menu():
         elif choice == "2":
             refresh_panel()
         elif choice == "3":
-            remove_panel()
+            restart_panel()
         elif choice == "4":
+            remove_panel()
+        elif choice == "5":
             print(f"\n{Fore.GREEN}Thank you for using OV-Panel!{Style.RESET_ALL}\n")
             sys.exit()
     except KeyboardInterrupt:
