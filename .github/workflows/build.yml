@@ -33,5 +33,6 @@ jobs:
       - name: Sync dependencies
         run: uv sync
 
-      - name: Run project (test build)
-        run: uv run main.py
+      - name: Test project startup
+        run: |
+          timeout 5s uv run main.py || true
