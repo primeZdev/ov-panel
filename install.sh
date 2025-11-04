@@ -18,7 +18,7 @@ pip3 install colorama pexpect requests uuid uv alembic
 if [ ! -d "$INSTALL_DIR" ]; then
     echo -e "${YELLOW}Downloading latest release...${NC}"
 
-    LATEST_URL=$(curl -s https://api.github.com/repos/primeZdev/ov-panel/releases/latest \
+    LATEST_URL=$(curl -s https://api.github.com/repos/iroblivionspark/ov-panel/releases/latest \
         | grep "tarball_url" \
         | cut -d '"' -f 4)
 
