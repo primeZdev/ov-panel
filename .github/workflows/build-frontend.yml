@@ -1,0 +1,99 @@
+name: Build Frontend
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write        
+  id-token: write     
+
+env:
+  NODE_VERSION: '22.12.0'
+  BUILD_DIR: 'dist'   
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Use Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'   
+
+      - name: Detect package manager
+        id: pm
+        run: |
+          if [ -f pnpm-lock.yaml ]; then echo "manager=pnpm" >> $GITHUB_OUTPUT;
+          elif [ -f yarn.lock ]; then echo "manager=yarn" >> $GITHUB_OUTPUT;
+          else echo "manager=npm" >> $GITHUB_OUTPUT; fi
+
+      - name: Cache node modules (explicit) 
+        uses: actions/cache@v4
+        with:
+          # caching both lockfile & node_modules is useful; key changes on lockfile changes
+          path: |
+            ~/.npm
+            node_modules
+          key: ${{ runner.os }}-node-${{ env.NODE_VERSION }}-${{ hashFiles('**/package-lock.json', '**/pnpm-lock.yaml', '**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-node-${{ env.NODE_VERSION }}-
+
+      - name: Install dependencies
+        run: |
+          if [ "${{ steps.pm.outputs.manager }}" = "pnpm" ]; then
+            corepack enable
+            corepack prepare pnpm@latest --activate
+            pnpm install --frozen-lockfile
+          elif [ "${{ steps.pm.outputs.manager }}" = "yarn" ]; then
+            corepack enable
+            corepack prepare yarn@stable --activate
+            yarn install --frozen-lockfile
+          else
+            npm ci
+          fi
+
+      - name: Optional: Patch known JSX/TSX casts (uncomment if you want automatic quick-fix)
+        if: false
+        run: |
+
+
+      - name: Build
+        run: npm run build
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: ${{ env.BUILD_DIR }}
+
+  
+  deploy_pages:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'   
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: ./site
+
+      - name: Deploy to GitHub Pages
+        uses: actions/configure-pages@v4
+      - name: Upload artifact for Pages
+        run: |
+          mkdir -p ./artifact
+          cp -R ./site/* ./artifact/
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v1
+        with:
+          path: ./artifact
