@@ -14,7 +14,7 @@ async def check_user_expiry_date():
         expired_users = crud.get_expired_users(db)
         for user in expired_users:
             user.is_active = False
-            await delete_user_on_server(user.name)
+            delete_user_on_server(user.name)
             await asyncio.sleep(2)  # to avoid overload the server with commands
         db.commit()
 

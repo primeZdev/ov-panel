@@ -1,6 +1,6 @@
 [project]
 name = "ov-panel"
-version = "1.0.0"
+version = "1.0.7"
 description = "An OpenVPN client management panel on the server"
 readme = "README.md"
 requires-python = ">=3.12"

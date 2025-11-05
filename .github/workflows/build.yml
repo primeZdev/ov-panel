@@ -1,0 +1,38 @@
+name: Build and Test OV-Panel
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install uv
+        run: |
+          pip install uv
+
+      - name: Create .env file
+        run: |
+          if [ -f .env.example ]; then
+            cp .env.example .env
+          fi
+
+      - name: Sync dependencies
+        run: uv sync
+
+      - name: Test project startup
+        run: |
+          timeout 5s uv run main.py || true

@@ -1,23 +1,174 @@
 import os
 import requests
-import pexpect, sys
+import pexpect
+import sys
 import subprocess
 import shutil
 import secrets
 import base64
-from colorama import Fore, Style
+import getpass
+import time
+from colorama import Fore, Style, init
+
+init(autoreset=True)
 
 
-def install_ovpanel():
+def create_secret_key(length: int = 64) -> str:
+    random_bytes = secrets.token_bytes(length)
+    secret_key = base64.b64encode(random_bytes).decode("utf-8").rstrip("=")
+    return secret_key
+
+
+def get_server_ip():
     try:
+        result = subprocess.run(
+            ["hostname", "-I"], capture_output=True, text=True, check=True
+        )
+        ip_addresses = result.stdout.strip().split()
+        return ip_addresses[0] if ip_addresses else "your-server-ip"
+    except:
+        return "your-server-ip"
+
+
+def display_panel_info(username, password, port, path):
+    subprocess.run("clear")
+    server_ip = get_server_ip()
+    url = f"http://{server_ip}:{port}/{path}" if path else f"http://{server_ip}:{port}/"
+
+    print(f"\n{Fore.CYAN}Access URL: {url}{Style.RESET_ALL}\n")
+
+
+def ask_user(prompt, allow_empty=False, input_type="text"):
+    while True:
+        try:
+            if input_type == "password":
+                value = getpass.getpass(prompt)
+            else:
+                value = input(prompt)
+
+            if not allow_empty and not value.strip():
+                print(Fore.RED + "Input cannot be empty. Please try again...")
+                time.sleep(2)
+                subprocess.run("clear")
+                continue
+            if input_type == "port":
+                try:
+                    port_num = int(value)
+                    if not (1 <= port_num <= 65535):
+                        print(Fore.RED + "Port must be between 1 and 65535.")
+                        time.sleep(2)
+                        subprocess.run("clear")
+                        continue
+                except ValueError:
+                    print(Fore.RED + "Port must be a valid number.")
+                    time.sleep(2)
+                    subprocess.run("clear")
+                    continue
+            return value.strip()
+        except KeyboardInterrupt:
+            print(f"\n\n{Fore.GREEN}Thank you for using OV-Panel!{Style.RESET_ALL}\n")
+            sys.exit(0)
+
+
+def ask_password(prompt):
+    while True:
+        try:
+            password = getpass.getpass(prompt)
+            if not password.strip():
+                print(Fore.RED + "Password cannot be empty. Please try again...")
+                time.sleep(2)
+                subprocess.run("clear")
+                continue
+            confirm_password = getpass.getpass("Confirm password: ")
+            if password != confirm_password:
+                print(Fore.RED + "Passwords do not match. Please try again...")
+                time.sleep(2)
+                subprocess.run("clear")
+                continue
+            return password
+        except KeyboardInterrupt:
+            print(f"\n\n{Fore.GREEN}Thank you for using OV-Panel!{Style.RESET_ALL}\n")
+            sys.exit(0)
+
+
+def show_banner():
+    subprocess.run("clear")
+    banner = f"""
+{Fore.CYAN} ____  _     ____  ____  _      _____ _    
+/  _ \\/ \\ |\\/  __\\/  _ \\/ \\  /|/  __// \\   
+| / \\|| | //|  \\/|| / \\|| |\\ |||  \\  | |   
+| \\_/|| \\// |  __/| |-||| | \\|||  /_ | |_/\\\\
+\\____/\\__/  \\_/   \\_/ \\|\\_/  \\|\\____\\\\____/
+{Style.RESET_ALL}
+"""
+    print(banner)
+
+
+def show_menu():
+    show_banner()
+
+    print(f"{Fore.YELLOW}Please choose an option:{Style.RESET_ALL}\n")
+
+    options = [
+        ("1", "Install", Fore.GREEN),
+        ("2", "Update", Fore.CYAN),
+        ("3", "Restart", Fore.BLUE),
+        ("4", "Uninstall", Fore.RED),
+        ("5", "Exit", Fore.YELLOW),
+    ]
+
+    for num, desc, color in options:
+        print(f"  {color}[{num}]{Style.RESET_ALL} {desc}")
+
+    print()
+
+
+def ask_choice():
+    while True:
+        try:
+            choice = input(f"{Fore.YELLOW}Enter your choice: {Style.RESET_ALL}")
+
+            if choice in ["1", "2", "3", "4", "5"]:
+                return choice
+            else:
+                print(
+                    f"\n{Fore.RED}Invalid choice. Please enter a number between 1-5{Style.RESET_ALL}"
+                )
+                time.sleep(2)
+                show_menu()
+        except KeyboardInterrupt:
+            print(f"\n\n{Fore.GREEN}Thank you for using OV-Panel!{Style.RESET_ALL}\n")
+            sys.exit(0)
+
+
+def ask_confirmation(prompt):
+    while True:
+        try:
+            choice = input(f"{Fore.YELLOW}{prompt} {Style.RESET_ALL}").strip().lower()
+            if choice in ["y", "yes", "n", "no"]:
+                return choice in ["y", "yes"]
+            else:
+                print(Fore.RED + "Please enter 'y' for yes or 'n' for no")
+                time.sleep(2)
+                subprocess.run("clear")
+        except KeyboardInterrupt:
+            print(f"\n\n{Fore.GREEN}Thank you for using OV-Panel!{Style.RESET_ALL}\n")
+            sys.exit(0)
+
+
+def setup_panel():
+    try:
+        subprocess.run("clear")
+        print(f"\n{Fore.YELLOW}Installing OpenVPN Core...{Style.RESET_ALL}\n")
+
         subprocess.run(
-            ["wget", "https://git.io/vpn", "-O", "/root/openvpn-install.sh"], check=True
-        )  # thanks to Nyr for ovpn installation script <3 https://github.com/Nyr/openvpn-install
+            ["wget", "https://git.io/vpn", "-O", "/root/openvpn-install.sh"],
+            check=True,  # thanks to Nyr for ovpn installation script <3 https://github.com/Nyr/openvpn-install
+        )
 
         bash = pexpect.spawn(
             "/usr/bin/bash", ["/root/openvpn-install.sh"], encoding="utf-8", timeout=180
         )
-        print("Running OpenVPN installer...")
 
         prompts = [
             (r"Which IPv4 address should be used.*:", "1"),
@@ -40,18 +191,24 @@ def install_ovpanel():
 
         shutil.copy(".env.example", ".env")
 
-        # OVPanel configuration prompts
-        panel_username = input("OVPanel username: ")
-        panel_password = input("OVPanel password: ")
-        panel_port = input("OVPanel port number: ")
-        panel_path = input("OVPanel path: ")
+        subprocess.run("clear")
+        print(f"\n{Fore.YELLOW}Panel Configuration{Style.RESET_ALL}\n")
+
+        panel_username = ask_user(f"{Fore.GREEN}> Panel username: {Style.RESET_ALL}")
+        panel_password = ask_password(f"{Fore.RED}> Panel password: {Style.RESET_ALL}")
+        panel_port = ask_user(
+            f"{Fore.GREEN}> Panel port number: {Style.RESET_ALL}", input_type="port"
+        )
+        panel_path = ask_user(
+            f"{Fore.GREEN}> Panel path (optional): {Style.RESET_ALL}", allow_empty=True
+        )
 
         replacements = {
             "ADMIN_USERNAME": panel_username,
             "ADMIN_PASSWORD": panel_password,
             "PORT": panel_port,
             "URLPATH": panel_path,
-            "JWT_SECRET_KEY": generate_jwt_secret_key(),
+            "JWT_SECRET_KEY": create_secret_key(),
         }
 
         lines = []
@@ -65,34 +222,53 @@ def install_ovpanel():
         with open(".env", "w") as f:
             f.writelines(lines)
 
-        # migrate database
         subprocess.run(["uv", "sync"], check=True)
-        migrate()
+        apply_migrations()
 
-        print(
-            f"OV-Panel installation completed successfully!\nYou can now access the panel at: http://your-server-ip:{panel_port}/{panel_path}"
-        )
-        run_ovpanel()
-        input("Press Enter to return to the menu...")
-        menu()
+        subprocess.run("clear")
+        print(f"\n{Fore.YELLOW}Installation Complete!{Style.RESET_ALL}")
+
+        display_panel_info(panel_username, panel_password, panel_port, panel_path)
+
+        start_service()
+        try:
+            input(f"{Fore.YELLOW}Press Enter to return to menu...{Style.RESET_ALL}")
+        except KeyboardInterrupt:
+            print(f"\n\n{Fore.GREEN}Thank you for using OV-Panel!{Style.RESET_ALL}\n")
+            sys.exit(0)
+        main_menu()
 
     except Exception as e:
-        print("Error occurred during installation:", e)
-        input("Press Enter to return to the menu...")
-        menu()
+        print(f"\n{Fore.RED}Installation failed: {e}{Style.RESET_ALL}")
+        try:
+            input(f"\n{Fore.YELLOW}Press Enter to return to menu...{Style.RESET_ALL}")
+        except KeyboardInterrupt:
+            print(f"\n\n{Fore.GREEN}Thank you for using OV-Panel!{Style.RESET_ALL}\n")
+            sys.exit(0)
+        main_menu()
 
 
-def generate_jwt_secret_key(length: int = 64) -> str:
-    """
-    Generate a secure SECRET_KEY for JWT
-    """
-    random_bytes = secrets.token_bytes(length)
-    secret_key = base64.b64encode(random_bytes).decode("utf-8").rstrip("=")
-    return secret_key
+def refresh_panel():
+    if not os.path.exists("/opt/ov-panel") or not os.path.exists(
+        "/etc/systemd/system/ov-panel.service"
+    ):
+        subprocess.run("clear")
+        print(
+            f"\n{Fore.MAGENTA}OV-Panel is not installed on your system.{Style.RESET_ALL}"
+        )
+        print(
+            f"{Fore.MAGENTA}Please install OV-Panel first using option 1.{Style.RESET_ALL}"
+        )
+        try:
+            input(f"\n{Fore.MAGENTA}Press Enter to return to menu...{Style.RESET_ALL}")
+        except KeyboardInterrupt:
+            print(f"\n\n{Fore.GREEN}Thank you for using OV-Panel!{Style.RESET_ALL}\n")
+            sys.exit(0)
+        main_menu()
+        return
 
+    print(f"\n{Fore.YELLOW}Updating OV-Panel...{Style.RESET_ALL}\n")
 
-def update_ovpanel():
-    print(Fore.YELLOW + "Updating OV-Panel, please wait..." + Style.RESET_ALL)
     try:
         repo = "https://api.github.com/repos/primeZdev/ov-panel/releases/latest"
         install_dir = "/opt/ov-panel"
@@ -107,7 +283,7 @@ def update_ovpanel():
         download_url = release["tarball_url"]
         filename = "/tmp/ov-panel-latest.tar.gz"
 
-        print(Fore.YELLOW + f"Downloading {download_url}" + Style.RESET_ALL)
+        print(f"{Fore.YELLOW}Downloading latest version...{Style.RESET_ALL}")
         subprocess.run(["wget", "-O", filename, download_url], check=True)
 
         if os.path.exists(env_file):
@@ -132,32 +308,85 @@ def update_ovpanel():
             shutil.move(backup_data, data_dir)
 
         os.chdir(install_dir)
-        # Install dependencies using uv sync with refresh to update lock file
         subprocess.run(["uv", "sync", "--refresh"], check=True)
-        migrate()
+        apply_migrations()
 
         subprocess.run(["systemctl", "restart", "ov-panel"], check=True)
 
-        print(Fore.GREEN + "OV-Panel updated successfully!" + Style.RESET_ALL)
-        input("Press Enter to return to the menu...")
-        menu()
+        print(f"\n{Fore.GREEN}Update Complete!{Style.RESET_ALL}\n")
+
+        try:
+            input(f"{Fore.YELLOW}Press Enter to return to menu...{Style.RESET_ALL}")
+        except KeyboardInterrupt:
+            print(f"\n\n{Fore.GREEN}Thank you for using OV-Panel!{Style.RESET_ALL}\n")
+            sys.exit(0)
+        main_menu()
 
     except Exception as e:
-        print(Fore.RED + f"Update failed: {str(e)}" + Style.RESET_ALL)
-        input("Press Enter to return to the menu...")
-        menu()
+        print(f"\n{Fore.RED}Update failed: {str(e)}{Style.RESET_ALL}")
+        try:
+            input(f"\n{Fore.YELLOW}Press Enter to return to menu...{Style.RESET_ALL}")
+        except KeyboardInterrupt:
+            print(f"\n\n{Fore.GREEN}Thank you for using OV-Panel!{Style.RESET_ALL}\n")
+            sys.exit(0)
+        main_menu()
 
 
-def uninstall_ovpanel():
+def restart_panel():
     try:
-        uninstall = input("Do you want to uninstall OV-Panel? (y/n): ")
-        if uninstall.lower() != "y":
-            print("Uninstallation canceled.")
-            menu()
+        if not os.path.exists("/etc/openvpn") and not os.path.exists("/opt/ov-panel"):
+            print(f"\n{Fore.RED}OV-Panel is not installed.{Style.RESET_ALL}")
+            return
+
+        print(f"\n{Fore.YELLOW}Restarting OV-Panel...{Style.RESET_ALL}")
+        subprocess.run(["systemctl", "restart", "ov-panel"], check=True)
+        time.sleep(3)
+        subprocess.run(["systemctl", "restart", "openvpn-server@server"], check=True)
+        print(f"\n{Fore.GREEN}OV-Panel restarted successfully!{Style.RESET_ALL}")
+        input(f"{Fore.YELLOW}Press Enter to return to menu...{Style.RESET_ALL}")
+        main_menu()
+
+    except Exception as e:
+        print(f"\n{Fore.RED}Failed to restart OV-Panel: {str(e)}{Style.RESET_ALL}")
+        try:
+            input(f"{Fore.YELLOW}Press Enter to return to menu...{Style.RESET_ALL}")
+        except KeyboardInterrupt:
+            print(f"\n\n{Fore.GREEN}Thank you for using OV-Panel!{Style.RESET_ALL}\n")
+            sys.exit(0)
+        main_menu()
+
+
+def remove_panel():
+    try:
+        if not os.path.exists("/etc/openvpn") and not os.path.exists("/opt/ov-panel"):
+            subprocess.run("clear")
+            print(
+                f"\n{Fore.YELLOW}OV-Panel is not installed on your system.{Style.RESET_ALL}"
+            )
+            try:
+                input(
+                    f"\n{Fore.YELLOW}Press Enter to return to menu...{Style.RESET_ALL}"
+                )
+            except KeyboardInterrupt:
+                print(
+                    f"\n\n{Fore.GREEN}Thank you for using OV-Panel!{Style.RESET_ALL}\n"
+                )
+                sys.exit(0)
+            main_menu()
+            return
+
+        subprocess.run("clear")
+        print(f"\n{Fore.RED}Warning: This will remove all panel data!{Style.RESET_ALL}")
+
+        if not ask_confirmation("Do you want to proceed? (y/n): "):
+            print(f"\n{Fore.YELLOW}Uninstallation cancelled.{Style.RESET_ALL}")
+            time.sleep(1)
+            main_menu()
+            return
 
         bash = pexpect.spawn("bash /root/openvpn-install.sh", timeout=60)
         subprocess.run("clear")
-        print("Please wait...")
+        print(f"\n{Fore.YELLOW}Processing removal...{Style.RESET_ALL}\n")
 
         bash.expect("Option:")
         bash.sendline("3")
@@ -166,29 +395,34 @@ def uninstall_ovpanel():
         bash.sendline("y")
 
         bash.expect("OpenVPN removed!")
-        os.remove("/etc/systemd/system/ov-panel.service")
-        print(
-            Fore.GREEN
-            + "OV-Panel uninstallation completed successfully!"
-            + Style.RESET_ALL
-        )
-        deactivate_ovpanel()
-        input("Press Enter to return to the menu...")
-        menu()
+
+        if os.path.exists("/etc/systemd/system/ov-panel.service"):
+            os.remove("/etc/systemd/system/ov-panel.service")
+
+        subprocess.run(["sudo", "systemctl", "daemon-reload"])
+        stop_service()
+
+        print(f"\n{Fore.GREEN}Uninstallation Complete!{Style.RESET_ALL}\n")
+
+        stop_service()
+        try:
+            input(f"{Fore.YELLOW}Press Enter to return to menu...{Style.RESET_ALL}")
+        except KeyboardInterrupt:
+            print(f"\n\n{Fore.GREEN}Thank you for using OV-Panel!{Style.RESET_ALL}\n")
+            sys.exit(0)
+        main_menu()
 
     except Exception as e:
-        print(
-            Fore.RED
-            + "Error occurred during uninstallation: "
-            + str(e)
-            + Style.RESET_ALL
-        )
-        input("Press Enter to return to the menu...")
-        menu()
+        print(f"\n{Fore.RED}Uninstallation failed: {str(e)}{Style.RESET_ALL}")
+        try:
+            input(f"\n{Fore.YELLOW}Press Enter to return to menu...{Style.RESET_ALL}")
+        except KeyboardInterrupt:
+            print(f"\n\n{Fore.GREEN}Thank you for using OV-Panel!{Style.RESET_ALL}\n")
+            sys.exit(0)
+        main_menu()
 
 
-def migrate() -> None:
-    """Migrate the database to the latest version"""
+def apply_migrations() -> None:
     backend_dir = "/opt/ov-panel/backend"
     current_dir = os.getcwd()
 
@@ -197,21 +431,20 @@ def migrate() -> None:
         if not os.path.exists("alembic.ini"):
             return
 
-        print(Fore.YELLOW + "Running Alembic migration..." + Style.RESET_ALL)
+        print(f"{Fore.YELLOW}Running Alembic migration...{Style.RESET_ALL}")
         subprocess.run(["alembic", "upgrade", "head"], check=True)
 
-        print(Fore.GREEN + "Database migrated successfully!" + Style.RESET_ALL)
+        print(f"{Fore.GREEN}Database migrated successfully!{Style.RESET_ALL}")
 
     except subprocess.CalledProcessError:
-        print(Fore.RED + "Database migration failed!" + Style.RESET_ALL)
+        print(f"{Fore.RED}Database migration failed!{Style.RESET_ALL}")
     except Exception as e:
-        print(Fore.RED + f"Unexpected error: {e}" + Style.RESET_ALL)
+        print(f"{Fore.RED}Unexpected error: {e}{Style.RESET_ALL}")
     finally:
         os.chdir(current_dir)
 
 
-def run_ovpanel() -> None:
-    """Create and run a systemd service for OV-Panel"""
+def start_service() -> None:
     service_content = """
 [Unit]
 Description=OV-Panel App
@@ -237,41 +470,42 @@ WantedBy=multi-user.target
     subprocess.run(["sudo", "systemctl", "start", "ov-panel"])
 
 
-def deactivate_ovpanel() -> None:
-    """Stop and disable the OV-Panel systemd service"""
-    subprocess.run(["sudo", "systemctl", "stop", "ov-panel"])
-    subprocess.run(["sudo", "systemctl", "disable", "ov-panel"])
-    subprocess.run(["rm", "-f", "/etc/systemd/system/ov-panel.service"])
+def stop_service() -> None:
+    service_file = "/etc/systemd/system/ov-panel.service"
+
+    subprocess.run(["sudo", "systemctl", "stop", "ov-panel"], stderr=subprocess.DEVNULL)
+
+    if os.path.exists(service_file):
+        subprocess.run(["rm", "-f", service_file])
+
+    subprocess.run(["sudo", "systemctl", "daemon-reload"])
+    subprocess.run(["sudo", "systemctl", "reset-failed"], stderr=subprocess.DEVNULL)
 
 
-def menu():
-    subprocess.run("clear")
-    print(Fore.GREEN + "=" * 34)
-    print("Welcome to the OV-Panel Installer")
-    print("=" * 34 + Style.RESET_ALL)
-    print()
-    print("Please choose an option:\n")
-    print("  1. Install")
-    print("  2. Update")
-    print("  3. Uninstall")
-    print("  4. Exit")
-    print()
-    choice = input(Fore.YELLOW + "Enter your choice: " + Style.RESET_ALL)
+def main_menu():
+    try:
+        show_menu()
+        choice = ask_choice()
 
-    if choice == "1":
-        install_ovpanel()
-    elif choice == "2":
-        update_ovpanel()
-    elif choice == "3":
-        uninstall_ovpanel()
-    elif choice == "4":
-        print(Fore.GREEN + "\nExiting... Goodbye!" + Style.RESET_ALL)
-        sys.exit()
-    else:
-        print(Fore.RED + "\nInvalid choice. Please try again." + Style.RESET_ALL)
-        input(Fore.YELLOW + "Press Enter to continue..." + Style.RESET_ALL)
-        menu()
+        if choice == "1":
+            setup_panel()
+        elif choice == "2":
+            refresh_panel()
+        elif choice == "3":
+            restart_panel()
+        elif choice == "4":
+            remove_panel()
+        elif choice == "5":
+            print(f"\n{Fore.GREEN}Thank you for using OV-Panel!{Style.RESET_ALL}\n")
+            sys.exit()
+    except KeyboardInterrupt:
+        print(f"\n\n{Fore.GREEN}Thank you for using OV-Panel!{Style.RESET_ALL}\n")
+        sys.exit(0)
 
 
 if __name__ == "__main__":
-    menu()
+    try:
+        main_menu()
+    except KeyboardInterrupt:
+        print(f"\n\n{Fore.GREEN}Thank you for using OV-Panel!{Style.RESET_ALL}\n")
+        sys.exit(0)

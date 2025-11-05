@@ -88,7 +88,7 @@ async def update_user(
 async def delete_user(
     name: str, db: Session = Depends(get_db), user: dict = Depends(get_current_user)
 ):
-    server_result = await delete_user_on_server(name)
+    server_result = delete_user_on_server(name)
     if server_result == "not_found":
         return ResponseModel(success=False, msg="User not found on server", data=None)
 
