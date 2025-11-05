@@ -1,0 +1,60 @@
+name: Build Frontend (from frontend/) and Push Build Branch
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '22.12.0'
+  FRONTEND_DIR: 'frontend'
+  BUILD_DIR: 'dist'
+  PUBLISH_BRANCH: 'build'  # change to gh-pages if you prefer
+
+jobs:
+  build_and_push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js ${{ env.NODE_VERSION }} (with npm cache pointing to frontend lockfile)
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: '${{ env.FRONTEND_DIR }}/package-lock.json'
+
+      - name: Show node/npm versions
+        run: |
+          node -v
+          npm -v
+
+      - name: Install dependencies (frontend)
+        working-directory: ${{ env.FRONTEND_DIR }}
+        run: |
+          # Use npm ci if lockfile exists, else fallback to npm install
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
+
+      - name: Build (frontend)
+        working-directory: ${{ env.FRONTEND_DIR }}
+        run: npm run build
+
+      - name: Verify build output
+        run: |
+          echo "Listing build output:"
+          ls -la ${{ env.FRONTEND_DIR }}/${{ env.BUILD_DIR }}
+
+      - name: Publish dist to branch '${{ env.PUBLISH_BRANCH }}'
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: ${{ env.PUBLISH_BRANCH }}
+          publish_dir: ${{ env.FRONTEND_DIR }}/${{ env.BUILD_DIR }}
+          force_orphan: true

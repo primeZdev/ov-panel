@@ -15,10 +15,13 @@ const DashboardLayout = () => {
   };
 
   const changeLanguage = () => {
-    const newLang = i18n.language === 'en' ? 'fa' : 'en';
-    i18n.changeLanguage(newLang);
-    document.documentElement.dir = newLang === 'fa' ? 'rtl' : 'ltr';
-  };
+  const langs = ['en', 'fa', 'ru'];
+  const current = i18n.language;
+  const next = langs[(langs.indexOf(current) + 1) % langs.length];
+
+  i18n.changeLanguage(next);
+  document.documentElement.dir = next === 'fa' ? 'rtl' : 'ltr';
+};
 
   return (
     <div id="main-container">
