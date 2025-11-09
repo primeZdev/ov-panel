@@ -13,7 +13,7 @@ import favicon from './assets/fav.webp';
 function App() {
   const { isAuthenticated } = useAuth();
 
-  
+
   useEffect(() => {
     const link = document.createElement('link');
     link.rel = 'icon';
@@ -28,12 +28,12 @@ function App() {
 
   return (
     <Routes>
-      <Route 
-        path="/login" 
-        element={isAuthenticated ? <Navigate to="/" /> : <LoginPage />} 
+      <Route
+        path="/login"
+        element={isAuthenticated ? <Navigate to="/" /> : <LoginPage />}
       />
-      <Route 
-        path="/" 
+      <Route
+        path="/"
         element={isAuthenticated ? <DashboardLayout /> : <Navigate to="/login" />}>
         <Route index element={<ServerStats />} />
         <Route path="users" element={<UserManagement />} />
