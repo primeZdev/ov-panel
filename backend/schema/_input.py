@@ -24,9 +24,3 @@ class NodeCreate(BaseModel):
     key: str = Field(min_length=10, max_length=40)
     status: bool = Field(default=True)
     set_new_setting: bool = Field(default=False)
-
-
-class SettingsUpdate(BaseModel):
-    tunnel_address: Optional[str] = None
-    port: Optional[int]
-    protocol: Optional[str]

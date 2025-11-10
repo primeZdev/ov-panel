@@ -6,11 +6,6 @@ from backend.schema.output import ResponseModel, Users
 from backend.schema._input import CreateUser, UpdateUser
 from backend.db.engine import get_db
 from backend.db import crud
-from backend.operations.user_management import (
-    create_user_on_server,
-    delete_user_on_server,
-    download_ovpn_file,
-)
 from backend.auth.auth import get_current_user
 from backend.node.task import (
     create_user_on_all_nodes,
@@ -33,22 +28,6 @@ async def get_all_users(
     )
 
 
-@router.get("/download/ovpn/{name}")
-async def download_ovpn(
-    name: str,
-    user: dict = Depends(get_current_user),
-):
-    response = download_ovpn_file(name)
-    if response:
-        return FileResponse(
-            path=response,
-            filename=f"{name}.ovpn",
-            media_type="application/x-openvpn-profile",
-        )
-    else:
-        return ResponseModel(success=False, msg="OVPN file not found", data=None)
-
-
 @router.post("/create", response_model=ResponseModel)
 async def create_user(
     request: CreateUser,
@@ -59,12 +38,6 @@ async def create_user(
     if check_user is not None:
         return ResponseModel(
             success=False, msg="User with this name already exists", data=None
-        )
-
-    server_result = create_user_on_server(request.name, request.expiry_date)
-    if not server_result:
-        return ResponseModel(
-            success=False, msg="Server error while creating user", data=None
         )
 
     await create_user_on_all_nodes(request.name, db)
@@ -88,10 +61,7 @@ async def update_user(
 async def delete_user(
     name: str, db: Session = Depends(get_db), user: dict = Depends(get_current_user)
 ):
-    server_result = delete_user_on_server(name)
-    if server_result == "not_found":
-        return ResponseModel(success=False, msg="User not found on server", data=None)
-
-    await delete_user_on_all_nodes(name, db)
-    db_result = crud.delete_user(db, name)
-    return ResponseModel(success=True, msg="User deleted successfully", data=db_result)
+    if await delete_user_on_all_nodes(name, db):
+        crud.delete_user(db, name)
+        return ResponseModel(success=True, msg="User deleted successfully")
+    return ResponseModel(success=False, msg="Failed to delete user on all nodes")

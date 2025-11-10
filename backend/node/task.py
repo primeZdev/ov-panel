@@ -115,7 +115,7 @@ async def download_ovpn_client_from_node(
     return None
 
 
-async def delete_user_on_all_nodes(name: str, db: Session):
+async def delete_user_on_all_nodes(name: str, db: Session) -> bool:
     """Delete a user from all nodes"""
     nodes = crud.get_all_nodes(db)
     if nodes:
@@ -133,3 +133,5 @@ async def delete_user_on_all_nodes(name: str, db: Session):
                 logger.warning(
                     f"Failed to delete user '{name}-{node.name}' on node {node.address}:{node.port}"
                 )
+        return True
+    return False

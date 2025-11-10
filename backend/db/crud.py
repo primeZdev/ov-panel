@@ -77,7 +77,6 @@ def delete_user(db: Session, name: str):
 
     db.delete(user)
     db.commit()
-    return {"detail": "User deleted successfully"}
 
 
 # admins crud

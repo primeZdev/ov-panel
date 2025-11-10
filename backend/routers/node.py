@@ -1,5 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
-from fastapi.responses import FileResponse
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from backend.auth.auth import get_current_user
