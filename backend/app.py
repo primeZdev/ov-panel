@@ -23,7 +23,7 @@ api = FastAPI(
 frontend_build_path = os.path.join(os.path.dirname(__file__), "..", "frontend", "dist")
 
 api.mount(
-    "/assets",
+    f"/{config.URLPATH}/assets",
     StaticFiles(directory=os.path.join(frontend_build_path, "assets")),
     name="assets",
 )
@@ -55,11 +55,12 @@ async def startup_event():
     start_scheduler()
 
 
+for router in all_routers:
+    api.include_router(prefix="/api", router=router)
+
+
+@api.get(f"/{config.URLPATH}/{{path:path}}")
 @api.get(f"/{config.URLPATH}")
 async def serve_react():
     index_path = os.path.join(frontend_build_path, "index.html")
     return FileResponse(index_path)
-
-
-for router in all_routers:
-    api.include_router(prefix="/api", router=router)
