@@ -1,6 +1,5 @@
 import os
 import requests
-import pexpect
 import sys
 import subprocess
 import shutil
@@ -159,40 +158,10 @@ def ask_confirmation(prompt):
 def setup_panel():
     try:
         subprocess.run("clear")
-        print(f"\n{Fore.YELLOW}Installing OpenVPN Core...{Style.RESET_ALL}\n")
-
-        subprocess.run(
-            ["wget", "https://git.io/vpn", "-O", "/root/openvpn-install.sh"],
-            check=True,  # thanks to Nyr for ovpn installation script <3 https://github.com/Nyr/openvpn-install
-        )
-
-        bash = pexpect.spawn(
-            "/usr/bin/bash", ["/root/openvpn-install.sh"], encoding="utf-8", timeout=180
-        )
-
-        prompts = [
-            (r"Which IPv4 address should be used.*:", "1"),
-            (r"Protocol.*:", "2"),
-            (r"Port.*:", "1194"),
-            (r"Select a DNS server for the clients.*:", "1"),
-            (r"Enter a name for the first client.*:", "first_client"),
-            (r"Press any key to continue...", ""),
-        ]
-
-        for pattern, reply in prompts:
-            try:
-                bash.expect(pattern, timeout=10)
-                bash.sendline(reply)
-            except pexpect.TIMEOUT:
-                pass
-
-        bash.expect(pexpect.EOF, timeout=None)
-        bash.close()
-
         shutil.copy(".env.example", ".env")
 
         subprocess.run("clear")
-        print(f"\n{Fore.YELLOW}Panel Configuration{Style.RESET_ALL}\n")
+        print(f"\n{Fore.YELLOW}OV-Panel Configuration{Style.RESET_ALL}\n")
 
         panel_username = ask_user(f"{Fore.GREEN}> Panel username: {Style.RESET_ALL}")
         panel_password = ask_password(f"{Fore.RED}> Panel password: {Style.RESET_ALL}")
@@ -208,6 +177,7 @@ def setup_panel():
             "ADMIN_PASSWORD": panel_password,
             "PORT": panel_port,
             "URLPATH": panel_path,
+            "VITE_URLPATH": panel_path,
             "JWT_SECRET_KEY": create_secret_key(),
         }
 
@@ -223,6 +193,9 @@ def setup_panel():
             f.writelines(lines)
 
         subprocess.run(["uv", "sync"], check=True)
+        if not build_frontend():
+            print(f"{Fore.RED}Frontend build failed!{Style.RESET_ALL}")
+            return
         apply_migrations()
 
         subprocess.run("clear")
@@ -307,6 +280,10 @@ def refresh_panel():
                 shutil.rmtree(data_dir)
             shutil.move(backup_data, data_dir)
 
+        if not build_frontend():
+            print(f"{Fore.RED}Frontend build failed!{Style.RESET_ALL}")
+            return
+
         os.chdir(install_dir)
         subprocess.run(["uv", "sync", "--refresh"], check=True)
         apply_migrations()
@@ -334,14 +311,12 @@ def refresh_panel():
 
 def restart_panel():
     try:
-        if not os.path.exists("/etc/openvpn") and not os.path.exists("/opt/ov-panel"):
+        if not os.path.exists("/opt/ov-panel"):
             print(f"\n{Fore.RED}OV-Panel is not installed.{Style.RESET_ALL}")
             return
 
         print(f"\n{Fore.YELLOW}Restarting OV-Panel...{Style.RESET_ALL}")
         subprocess.run(["systemctl", "restart", "ov-panel"], check=True)
-        time.sleep(3)
-        subprocess.run(["systemctl", "restart", "openvpn-server@server"], check=True)
         print(f"\n{Fore.GREEN}OV-Panel restarted successfully!{Style.RESET_ALL}")
         input(f"{Fore.YELLOW}Press Enter to return to menu...{Style.RESET_ALL}")
         main_menu()
@@ -358,7 +333,7 @@ def restart_panel():
 
 def remove_panel():
     try:
-        if not os.path.exists("/etc/openvpn") and not os.path.exists("/opt/ov-panel"):
+        if not os.path.exists("/opt/ov-panel"):
             subprocess.run("clear")
             print(
                 f"\n{Fore.YELLOW}OV-Panel is not installed on your system.{Style.RESET_ALL}"
@@ -384,27 +359,12 @@ def remove_panel():
             main_menu()
             return
 
-        bash = pexpect.spawn("bash /root/openvpn-install.sh", timeout=60)
         subprocess.run("clear")
         print(f"\n{Fore.YELLOW}Processing removal...{Style.RESET_ALL}\n")
-
-        bash.expect("Option:")
-        bash.sendline("3")
-
-        bash.expect("Confirm OpenVPN removal")
-        bash.sendline("y")
-
-        bash.expect("OpenVPN removed!")
-
-        if os.path.exists("/etc/systemd/system/ov-panel.service"):
-            os.remove("/etc/systemd/system/ov-panel.service")
-
-        subprocess.run(["sudo", "systemctl", "daemon-reload"])
         stop_service()
 
         print(f"\n{Fore.GREEN}Uninstallation Complete!{Style.RESET_ALL}\n")
 
-        stop_service()
         try:
             input(f"{Fore.YELLOW}Press Enter to return to menu...{Style.RESET_ALL}")
         except KeyboardInterrupt:
@@ -420,6 +380,17 @@ def remove_panel():
             print(f"\n\n{Fore.GREEN}Thank you for using OV-Panel!{Style.RESET_ALL}\n")
             sys.exit(0)
         main_menu()
+
+
+def build_frontend() -> bool:
+    try:
+        frontend_dir = "/opt/ov-panel/frontend"
+        subprocess.run(["npm", "install"], cwd=frontend_dir)
+        subprocess.run(["npm", "run", "build"], cwd=frontend_dir)
+        return True
+    except Exception as e:
+        print(f"{Fore.RED}Failed to build frontend: {str(e)}{Style.RESET_ALL}")
+        return False
 
 
 def apply_migrations() -> None:
