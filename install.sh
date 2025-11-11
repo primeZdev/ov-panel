@@ -3,7 +3,7 @@ set -e
 
 APP_NAME="ov-panel"
 INSTALL_DIR="/opt/$APP_NAME"
-REPO_URL="https://github.com/primeZdev/ov-panel"
+REPO_URL="https://github.com/VPNOS/ov-panel"
 PYTHON="/usr/bin/python3"
 
 GREEN="\033[0;32m"
@@ -74,27 +74,24 @@ show_welcome_banner
 
 apt update -y
 apt install -y python3 python3-pip python3-venv wget curl git -y
-pip3 install colorama pexpect requests uuid uv alembic --break-system-packages
 
 if [ ! -d "$INSTALL_DIR" ]; then
-    echo -e "${YELLOW}Downloading latest release...${NC}"
-
-    LATEST_URL=$(curl -s https://api.github.com/repos/primeZdev/ov-panel/releases/latest \
-        | grep "tarball_url" \
-        | cut -d '"' -f 4)
-
-    mkdir -p "$INSTALL_DIR"
-    cd /tmp
-
-    wget -O latest.tar.gz "$LATEST_URL"
-
-    echo -e "${YELLOW}Extracting...${NC}"
-    tar -xzf latest.tar.gz -C "$INSTALL_DIR" --strip-components=1
-    rm -f latest.tar.gz
-
+    echo -e "${YELLOW}Cloning repository from $REPO_URL...${NC}"
+    git clone "$REPO_URL" "$INSTALL_DIR"
 else
-    echo -e "${GREEN}Directory exists, skipping download.${NC}"
+    echo -e "${YELLOW}Directory exists, pulling latest changes...${NC}"
+    cd "$INSTALL_DIR"
+    git pull
 fi
 
 cd "$INSTALL_DIR"
-$PYTHON installer.py
+
+echo -e "${YELLOW}Creating Python virtual environment...${NC}"
+$PYTHON -m venv venv
+
+echo -e "${YELLOW}Installing dependencies into virtual environment...${NC}"
+source venv/bin/activate
+pip install --upgrade pip
+pip install colorama pexpect requests alembic
+
+venv/bin/python installer.py
