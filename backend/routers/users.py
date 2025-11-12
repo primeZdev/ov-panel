@@ -11,7 +11,7 @@ from backend.operations.user_management import (
     delete_user_on_server,
     download_ovpn_file,
 )
-from backend.auth.auth import get_current_user, verify_jwt_or_api_key
+from backend.auth.auth import verify_jwt_or_api_key
 from backend.node.task import (
     create_user_on_all_nodes,
     delete_user_on_all_nodes,
@@ -36,7 +36,7 @@ async def get_all_users(
 @router.get("/download/ovpn/{name}")
 async def download_ovpn(
     name: str,
-    user: dict = Depends(get_current_user),
+    auth: dict = Depends(verify_jwt_or_api_key),
 ):
     response = download_ovpn_file(name)
     if response:
@@ -53,7 +53,7 @@ async def download_ovpn(
 async def create_user(
     request: CreateUser,
     db: Session = Depends(get_db),
-    user: dict = Depends(get_current_user),
+    auth: dict = Depends(verify_jwt_or_api_key),
 ):
     check_user = crud.get_user_by_name(db, request.name)
     if check_user is not None:
@@ -78,7 +78,7 @@ async def create_user(
 async def update_user(
     request: UpdateUser,
     db: Session = Depends(get_db),
-    user: dict = Depends(get_current_user),
+    auth: dict = Depends(verify_jwt_or_api_key),
 ):
     result = crud.update_user(db, request)
     return ResponseModel(success=True, msg="User updated successfully", data=result)
@@ -86,7 +86,7 @@ async def update_user(
 
 @router.delete("/delete/{name}")
 async def delete_user(
-    name: str, db: Session = Depends(get_db), user: dict = Depends(get_current_user)
+    name: str, db: Session = Depends(get_db), auth: dict = Depends(verify_jwt_or_api_key)
 ):
     server_result = delete_user_on_server(name)
     if server_result == "not_found":

@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
-from backend.auth.auth import get_current_user
+from backend.auth.auth import verify_jwt_or_api_key
 from backend.db.engine import get_db
 from backend.schema.output import ResponseModel
 from backend.schema._input import NodeCreate
@@ -26,7 +26,7 @@ router = APIRouter(prefix="/node", tags=["Nodes"])
 async def add_node(
     request: NodeCreate,
     db: Session = Depends(get_db),
-    user: dict = Depends(get_current_user),
+    auth: dict = Depends(verify_jwt_or_api_key),
 ):
     """Add a new node and automatically sync all existing users to it."""
     result = await add_node_handler(request, db)
@@ -58,7 +58,7 @@ async def update_node(
     address: str,
     request: NodeCreate,
     db: Session = Depends(get_db),
-    user: dict = Depends(get_current_user),
+    auth: dict = Depends(verify_jwt_or_api_key),
 ):
     result = await update_node_handler(address, request, db)
     return ResponseModel(
@@ -71,7 +71,7 @@ async def update_node(
 async def get_node_status(
     address: str,
     db: Session = Depends(get_db),
-    user: dict = Depends(get_current_user),
+    auth: dict = Depends(verify_jwt_or_api_key),
 ):
     node_status = await get_node_status_handler(address, db)
     return ResponseModel(
@@ -84,7 +84,7 @@ async def get_node_status(
 @router.get("/list", response_model=ResponseModel)
 async def list_nodes(
     db: Session = Depends(get_db),
-    user: dict = Depends(get_current_user),
+    auth: dict = Depends(verify_jwt_or_api_key),
 ):
     """Get all nodes with their cached health status.
     
@@ -103,7 +103,7 @@ async def list_nodes(
 @router.get("/list/with-status", response_model=ResponseModel)
 async def list_nodes_with_live_status(
     db: Session = Depends(get_db),
-    user: dict = Depends(get_current_user),
+    auth: dict = Depends(verify_jwt_or_api_key),
 ):
     """Get all nodes with their live status including CPU and memory usage.
     
@@ -189,7 +189,7 @@ async def list_nodes_with_live_status(
 @router.get("/list/healthy", response_model=ResponseModel)
 async def list_healthy_nodes(
     db: Session = Depends(get_db),
-    user: dict = Depends(get_current_user),
+    auth: dict = Depends(verify_jwt_or_api_key),
 ):
     """Get only healthy and active nodes for download selection."""
     from backend.db import crud
@@ -220,7 +220,7 @@ async def download_ovpn_client(
     address: str,
     name: str,
     db: Session = Depends(get_db),
-    user: dict = Depends(get_current_user),
+    auth: dict = Depends(verify_jwt_or_api_key),
 ):
     """Download OVPN from specific node with health validation."""
     response = await download_ovpn_client_from_node(
@@ -256,7 +256,7 @@ async def download_ovpn_client(
 async def download_ovpn_from_best(
     name: str,
     db: Session = Depends(get_db),
-    user: dict = Depends(get_current_user),
+    auth: dict = Depends(verify_jwt_or_api_key),
 ):
     """Download OVPN from the best performing healthy node."""
     response = await download_ovpn_from_best_node(name=name, db=db)
@@ -273,7 +273,7 @@ async def download_ovpn_from_best(
 async def delete_node(
     address: str,
     db: Session = Depends(get_db),
-    user: dict = Depends(get_current_user),
+    auth: dict = Depends(verify_jwt_or_api_key),
 ):
     result = await delete_node_handler(address, db)
     return ResponseModel(
@@ -286,7 +286,7 @@ async def delete_node(
 @router.post("/health-check/all", response_model=ResponseModel)
 async def health_check_all_nodes(
     db: Session = Depends(get_db),
-    user: dict = Depends(get_current_user),
+    auth: dict = Depends(verify_jwt_or_api_key),
 ):
     """Run health check on all nodes."""
     health_service = HealthCheckService(db)
@@ -305,7 +305,7 @@ async def health_check_all_nodes(
 async def health_check_node(
     address: str,
     db: Session = Depends(get_db),
-    user: dict = Depends(get_current_user),
+    auth: dict = Depends(verify_jwt_or_api_key),
 ):
     """Run health check on a specific node."""
     from backend.db import crud
@@ -327,7 +327,7 @@ async def health_check_node(
 @router.post("/recover", response_model=ResponseModel)
 async def recover_nodes(
     db: Session = Depends(get_db),
-    user: dict = Depends(get_current_user),
+    auth: dict = Depends(verify_jwt_or_api_key),
 ):
     """Attempt to recover unhealthy nodes."""
     health_service = HealthCheckService(db)
@@ -344,7 +344,7 @@ async def recover_nodes(
 @router.post("/sync/all", response_model=ResponseModel)
 async def sync_all_nodes(
     db: Session = Depends(get_db),
-    user: dict = Depends(get_current_user),
+    auth: dict = Depends(verify_jwt_or_api_key),
 ):
     """Synchronize all users to all healthy nodes."""
     sync_service = SyncService(db)
@@ -363,7 +363,7 @@ async def sync_all_nodes(
 @router.post("/sync/pending", response_model=ResponseModel)
 async def sync_pending_nodes(
     db: Session = Depends(get_db),
-    user: dict = Depends(get_current_user),
+    auth: dict = Depends(verify_jwt_or_api_key),
 ):
     """Synchronize only nodes with pending sync status."""
     sync_service = SyncService(db)
@@ -380,7 +380,7 @@ async def sync_pending_nodes(
 async def sync_single_node(
     address: str,
     db: Session = Depends(get_db),
-    user: dict = Depends(get_current_user),
+    auth: dict = Depends(verify_jwt_or_api_key),
 ):
     """Synchronize all users to a specific node."""
     from backend.db import crud
@@ -408,7 +408,7 @@ async def sync_single_node(
 # Scheduler Management Endpoints
 @router.get("/scheduler/status", response_model=ResponseModel)
 async def get_scheduler_status(
-    user: dict = Depends(get_current_user),
+    auth: dict = Depends(verify_jwt_or_api_key),
 ):
     """Get scheduler status and scheduled jobs."""
     from backend.node.scheduler import scheduler

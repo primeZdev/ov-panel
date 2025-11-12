@@ -5,7 +5,7 @@ from typing import List
 from backend.db.engine import get_db
 from backend.db import crud
 from backend.schema.output import Admins, ResponseModel
-from backend.auth.auth import get_current_user
+from backend.auth.auth import verify_jwt_or_api_key
 
 
 router = APIRouter(prefix="/admin", tags=["Admins"])
@@ -13,7 +13,7 @@ router = APIRouter(prefix="/admin", tags=["Admins"])
 
 @router.get("/all", response_model=ResponseModel)
 async def get_all_admins(
-    db: Session = Depends(get_db), user: dict = Depends(get_current_user)
+    db: Session = Depends(get_db), auth: dict = Depends(verify_jwt_or_api_key)
 ):
     result = crud.get_all_admins(db)
     return ResponseModel(
