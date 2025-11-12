@@ -52,13 +52,13 @@ const NodeTable = ({ nodes, isLoading, onDelete, onCheckStatus, onEdit }) => {
                   </div>
                 </td>
                 <td>
-                  {node.cpu_usage !== null && node.cpu_usage !== undefined 
-                    ? `${node.cpu_usage}%` 
+                  {node.cpu_usage !== null && node.cpu_usage !== undefined
+                    ? `${node.cpu_usage}%`
                     : '-'}
                 </td>
                 <td>
-                  {node.memory_usage !== null && node.memory_usage !== undefined 
-                    ? `${node.memory_usage}%` 
+                  {node.memory_usage !== null && node.memory_usage !== undefined
+                    ? `${node.memory_usage}%`
                     : '-'}
                 </td>
                 <td>
