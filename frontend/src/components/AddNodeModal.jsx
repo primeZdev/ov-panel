@@ -41,7 +41,24 @@ const AddNodeModal = ({ onClose, onNodeCreated }) => {
     try {
       const response = await apiClient.post('/node/add', payload);
       if (response.data.success) {
-        alert('Node created successfully.');
+        // Show detailed message about sync
+        const syncInfo = response.data.data?.sync_info;
+        let message = response.data.msg || 'Node created successfully.';
+        
+        if (syncInfo) {
+          const { total_users, synced, failed } = syncInfo;
+          if (total_users > 0) {
+            if (failed === 0) {
+              message += `\n✓ All ${synced} users synced successfully to the new node.`;
+            } else {
+              message += `\n⚠ ${synced}/${total_users} users synced (${failed} failed).`;
+            }
+          } else {
+            message += '\nℹ No users to sync.';
+          }
+        }
+        
+        alert(message);
         onNodeCreated();
       } else {
         setError(response.data.msg || 'Unable to create node.');

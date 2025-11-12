@@ -10,8 +10,12 @@ from .health_check import HealthCheckService
 from .sync import SyncService
 
 
-async def add_node_handler(request: NodeCreate, db: Session) -> bool:
-    """Add a new node with health check."""
+async def add_node_handler(request: NodeCreate, db: Session) -> dict:
+    """Add a new node with health check and sync all users to it.
+    
+    Returns:
+        dict with success status and sync information
+    """
     new_node = NodeRequests(
         request.address,
         request.port,
@@ -41,24 +45,54 @@ async def add_node_handler(request: NodeCreate, db: Session) -> bool:
         
         logger.info(f"Node added successfully: {request.address}:{request.port}")
         
-        # Sync all users to new node in background (don't await)
-        asyncio.create_task(_sync_node_background(node.id, db))
+        # Sync all users to new node immediately
+        logger.info(f"Starting user synchronization for new node: {request.address}:{request.port}")
+        sync_service = SyncService(db)
+        sync_result = await sync_service.sync_all_users_to_node(node)
         
-        return True
+        # Log sync results
+        result = {
+            "success": True,
+            "node_address": request.address,
+            "node_port": request.port,
+            "sync_info": {}
+        }
+        
+        if sync_result:
+            total_users = sync_result.get("total_users", 0)
+            synced = sync_result.get("synced", 0)
+            failed = sync_result.get("failed", 0)
+            
+            result["sync_info"] = {
+                "total_users": total_users,
+                "synced": synced,
+                "failed": failed
+            }
+            
+            logger.info(
+                f"User synchronization completed for node {request.address}:{request.port}: "
+                f"{synced}/{total_users} users synced successfully, {failed} failed"
+            )
+            
+            if total_users == 0:
+                logger.info(f"No users to sync for node {request.address}:{request.port}")
+            elif failed == 0:
+                logger.info(f"All users successfully synced to node {request.address}:{request.port}")
+            else:
+                logger.warning(
+                    f"Some users failed to sync to node {request.address}:{request.port}: "
+                    f"{failed} out of {total_users}"
+                )
+        
+        return result
     else:
         logger.warning(f"Failed to add node - unhealthy: {request.address}:{request.port}")
-        return False
-
-
-async def _sync_node_background(node_id: int, db: Session):
-    """Background task to sync node."""
-    try:
-        node = crud.get_node_by_id(db, node_id)
-        if node:
-            sync_service = SyncService(db)
-            await sync_service.sync_all_users_to_node(node)
-    except Exception as e:
-        logger.error(f"Background sync failed for node {node_id}: {e}")
+        return {
+            "success": False,
+            "node_address": request.address,
+            "node_port": request.port,
+            "error": "Node health check failed"
+        }
 
 
 async def update_node_handler(address: str, request: NodeCreate, db: Session) -> None:

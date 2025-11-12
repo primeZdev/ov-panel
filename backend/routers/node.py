@@ -28,10 +28,28 @@ async def add_node(
     db: Session = Depends(get_db),
     user: dict = Depends(get_current_user),
 ):
-    new_node = await add_node_handler(request, db)
+    """Add a new node and automatically sync all existing users to it."""
+    result = await add_node_handler(request, db)
+    
+    if result.get("success"):
+        sync_info = result.get("sync_info", {})
+        total = sync_info.get("total_users", 0)
+        synced = sync_info.get("synced", 0)
+        failed = sync_info.get("failed", 0)
+        
+        if total == 0:
+            msg = "Node added successfully. No users to sync."
+        elif failed == 0:
+            msg = f"Node added successfully. All {synced} users synced to the new node."
+        else:
+            msg = f"Node added successfully. {synced}/{total} users synced ({failed} failed)."
+    else:
+        msg = result.get("error", "Failed to add node")
+    
     return ResponseModel(
-        success=new_node,
-        msg="Node added successfully" if new_node else "Failed to add node",
+        success=result.get("success", False),
+        msg=msg,
+        data=result
     )
 
 
