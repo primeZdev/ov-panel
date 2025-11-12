@@ -15,6 +15,7 @@ class Setting(BaseSettings):
     SSL_CERTFILE: Optional[str] = None
     JWT_SECRET_KEY: str
     JWT_ACCESS_TOKEN_EXPIRES: int = 86400  # in seconds
+    API_KEY: Optional[str] = None  # Optional API key for external integrations
 
     class Config:
         env_file = os.path.join(os.path.dirname(__file__), "..", ".env")

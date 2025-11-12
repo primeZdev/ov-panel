@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Header
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
 from jose import JWTError, jwt
 from passlib.context import CryptContext
+from typing import Optional, Union
 from backend.db.engine import get_db
 from backend.config import config
 from backend.db import crud
@@ -59,7 +60,7 @@ async def login(
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"/{config.URLPATH}/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"/{config.URLPATH}/login", auto_error=False)
 
 
 def get_current_user(token: str = Depends(oauth2_scheme)):
@@ -78,3 +79,94 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
     except JWTError:
         raise credentials_exception
     return {"username": username, "type": user_type}
+
+
+# ==================== NEW API KEY AUTHENTICATION ====================
+
+def verify_api_key(x_api_key: Optional[str] = Header(None, alias="X-API-Key")) -> dict:
+    """
+    Verify API key from X-API-Key header.
+    This is for external integrations that need to access the API.
+    
+    Usage:
+        Add header: X-API-Key: your-api-key-here
+    
+    Returns:
+        dict with authentication info if valid
+    
+    Raises:
+        HTTPException if API key is invalid or missing
+    """
+    if not config.API_KEY:
+        raise HTTPException(
+            status_code=status.HTTP_501_NOT_IMPLEMENTED,
+            detail="API Key authentication is not configured on this server",
+        )
+    
+    if not x_api_key:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Missing X-API-Key header",
+            headers={"WWW-Authenticate": "ApiKey"},
+        )
+    
+    if x_api_key != config.API_KEY:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid API Key",
+            headers={"WWW-Authenticate": "ApiKey"},
+        )
+    
+    return {"type": "api_key", "authenticated": True}
+
+
+def verify_jwt_or_api_key(
+    token: Optional[str] = Depends(oauth2_scheme),
+    x_api_key: Optional[str] = Header(None, alias="X-API-Key")
+) -> dict:
+    """
+    Accept either JWT Bearer token OR API Key authentication.
+    This allows both frontend (JWT) and external integrations (API Key) to access endpoints.
+    
+    Priority:
+        1. Try API Key first if present
+        2. Fall back to JWT Bearer token
+        3. Raise error if neither is valid
+    
+    Returns:
+        dict with authentication info
+    """
+    # Try API Key first if provided
+    if x_api_key:
+        if not config.API_KEY:
+            raise HTTPException(
+                status_code=status.HTTP_501_NOT_IMPLEMENTED,
+                detail="API Key authentication is not configured",
+            )
+        if x_api_key == config.API_KEY:
+            return {"type": "api_key", "authenticated": True}
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid API Key",
+                headers={"WWW-Authenticate": "ApiKey"},
+            )
+    
+    # Fall back to JWT token
+    if token:
+        try:
+            payload = jwt.decode(token, config.JWT_SECRET_KEY, algorithms=[ALGORITHM])
+            username: str = payload.get("sub")
+            user_type: str = payload.get("type")
+            if username:
+                return {"username": username, "type": user_type, "authenticated": True}
+        except JWTError:
+            pass
+    
+    # Neither authentication method worked
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials. Provide either valid JWT Bearer token or X-API-Key header",
+        headers={"WWW-Authenticate": "Bearer, ApiKey"},
+    )
+
