@@ -68,5 +68,12 @@
     "nodeCreatedAt": "Created At",
     "noNodesFound": "No nodes found.",
     "optional": "Optional",
-    "deleteNodeConfirm": "Are you sure you want to delete node"
+    "deleteNodeConfirm": "Are you sure you want to delete node",
+    "status_online": "Online",
+    "status_offline": "Offline",
+    "nodesOnline": "Online Nodes",
+    "nodesOffline": "Offline Nodes",
+    "th_cpuUsage": "CPU Usage",
+    "th_memoryUsage": "Memory Usage",
+    "th_responseTime": "Response Time"
 }

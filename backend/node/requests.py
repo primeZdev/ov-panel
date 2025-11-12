@@ -137,18 +137,26 @@ class NodeRequests:
         return False, None
 
     async def get_node_info_async(self) -> dict:
-        """Async version to get detailed node information."""
+        """Async version to get detailed node information including CPU and memory."""
         api = f"http://{self.address}/sync/get-status"
+        data = {
+            "tunnel_address": self.tunnel_addres,
+            "protocol": self.protocol,
+            "ovpn_port": self.ovpn_port,
+            "set_new_setting": self.set_new_setting,
+        }
         
-        response, response_time = await self._make_request_async("GET", api, headers=self.headers)
+        response, response_time = await self._make_request_async(
+            "POST", api, headers=self.headers, json=data
+        )
         
         if response and response.status_code == 200:
             try:
                 json_data = response.json()
                 if json_data.get("success"):
-                    data = json_data.get("data", {})
-                    data["response_time"] = response_time
-                    return data
+                    node_data = json_data.get("data", {})
+                    node_data["response_time"] = response_time
+                    return node_data
             except Exception:
                 pass
         

@@ -25,9 +25,9 @@ const NodeManagement = () => {
   const fetchNodes = useCallback(async () => {
     setIsLoading(true);
     try {
-      const response = await apiClient.get('/node/list');
+      const response = await apiClient.get('/node/list/with-status');
       if (response.data.success) {
-        setNodes(response.data.data || []);
+        setNodes(response.data.data.nodes || []);
       }
     } catch (error) {
       console.error('Error fetching nodes:', error);
@@ -38,14 +38,17 @@ const NodeManagement = () => {
 
   useEffect(() => {
     fetchNodes();
+    // Refresh node status every 30 seconds
+    const interval = setInterval(fetchNodes, 30000);
+    return () => clearInterval(interval);
   }, [fetchNodes]);
 
   const nodeStats = useMemo(() => {
-    const activeCount = nodes.filter((node) => node.status).length;
+    const onlineCount = nodes.filter((node) => node.status === 'online').length;
     return {
       total: nodes.length,
-      active: activeCount,
-      inactive: nodes.length - activeCount,
+      online: onlineCount,
+      offline: nodes.length - onlineCount,
     };
   }, [nodes]);
 
@@ -131,15 +134,15 @@ const NodeManagement = () => {
         />
         <UserStatCard
           icon={<FiCheckCircle className="icon" />}
-          label={t('nodesActive')}
-          value={nodeStats.active}
+          label={t('nodesOnline')}
+          value={nodeStats.online}
           color="var(--success-color)"
           className="card-green"
         />
         <UserStatCard
           icon={<FiXCircle className="icon" />}
-          label={t('nodesInactive')}
-          value={nodeStats.inactive}
+          label={t('nodesOffline')}
+          value={nodeStats.offline}
           color="var(--danger-color)"
           className="card-red"
         />

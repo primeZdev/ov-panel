@@ -41,11 +41,11 @@ const ServerStats = () => {
   const { t } = useTranslation();
 
   const nodeStats = useMemo(() => {
-    const activeCount = nodes.filter((node) => node.status).length;
+    const onlineCount = nodes.filter((node) => node.status === 'online').length;
     return {
       total: nodes.length,
-      active: activeCount,
-      inactive: nodes.length - activeCount,
+      online: onlineCount,
+      offline: nodes.length - onlineCount,
     };
   }, [nodes]);
 
@@ -74,9 +74,9 @@ const ServerStats = () => {
 
     const fetchNodes = async () => {
       try {
-        const response = await apiClient.get('/node/list');
+        const response = await apiClient.get('/node/list/with-status');
         if (response.data.success) {
-          setNodes(response.data.data || []);
+          setNodes(response.data.data.nodes || []);
         }
       } catch (error) {
         console.error("Error fetching nodes:", error);
@@ -159,15 +159,15 @@ const ServerStats = () => {
         />
         <StatCard
           icon={<FiCheckCircle className="icon" />}
-          label={t('nodesActive')}
-          value={nodeStats.active}
+          label={t('nodesOnline')}
+          value={nodeStats.online}
           className="card-green"
           color="var(--success-color)"
         />
         <StatCard
           icon={<FiXCircle className="icon" />}
-          label={t('nodesInactive')}
-          value={nodeStats.inactive}
+          label={t('nodesOffline')}
+          value={nodeStats.offline}
           className="card-red"
           color="var(--danger-color)"
         />

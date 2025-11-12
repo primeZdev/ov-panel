@@ -17,6 +17,7 @@ from backend.node.task import (
 )
 from backend.node.health_check import HealthCheckService
 from backend.node.sync import SyncService
+from backend.logger import logger
 
 router = APIRouter(prefix="/node", tags=["Nodes"])
 
@@ -78,6 +79,92 @@ async def list_nodes(
         success=True,
         msg="Nodes retrieved successfully",
         data=nodes,
+    )
+
+
+@router.get("/list/with-status", response_model=ResponseModel)
+async def list_nodes_with_live_status(
+    db: Session = Depends(get_db),
+    user: dict = Depends(get_current_user),
+):
+    """Get all nodes with their live status including CPU and memory usage.
+    
+    This endpoint fetches real-time status from each node.
+    Use this for dashboard/monitoring views.
+    """
+    from backend.db import crud
+    from backend.node.requests import NodeRequests
+    import asyncio
+    
+    all_nodes = crud.get_all_nodes(db)
+    
+    async def fetch_node_status(node):
+        """Fetch live status for a single node."""
+        node_info = {
+            "name": node.name,
+            "address": node.address,
+            "tunnel_address": node.tunnel_address,
+            "ovpn_port": node.ovpn_port,
+            "protocol": node.protocol,
+            "port": node.port,
+            "status": "offline",
+            "is_healthy": False,
+            "cpu_usage": None,
+            "memory_usage": None,
+            "node_status": None,
+            "response_time": None,
+            "last_health_check": str(node.last_health_check) if node.last_health_check else None,
+        }
+        
+        # Only check if node is marked as active
+        if node.status:
+            try:
+                node_request = NodeRequests(
+                    address=node.address,
+                    port=node.port,
+                    api_key=node.key,
+                    tunnel_addres=node.tunnel_address or "ovpanel.com",
+                    protocol=node.protocol,
+                    ovpn_port=node.ovpn_port,
+                    timeout=3,  # Quick timeout
+                    max_retries=0,  # No retries for speed
+                )
+                
+                # Get live node info
+                live_data = await node_request.get_node_info_async()
+                
+                if live_data:
+                    node_info.update({
+                        "status": "online",
+                        "is_healthy": True,
+                        "cpu_usage": live_data.get("cpu_usage"),
+                        "memory_usage": live_data.get("memory_usage"),
+                        "node_status": live_data.get("status"),
+                        "response_time": round(live_data.get("response_time", 0), 3) if live_data.get("response_time") else None,
+                    })
+            except Exception as e:
+                logger.warning(f"Failed to get live status for node {node.address}: {e}")
+        
+        return node_info
+    
+    # Fetch all node statuses concurrently
+    nodes_with_status = await asyncio.gather(*[fetch_node_status(node) for node in all_nodes])
+    
+    # Calculate summary stats
+    online_count = sum(1 for n in nodes_with_status if n["status"] == "online")
+    offline_count = len(nodes_with_status) - online_count
+    
+    return ResponseModel(
+        success=True,
+        msg="Nodes with live status retrieved successfully",
+        data={
+            "nodes": nodes_with_status,
+            "summary": {
+                "total": len(nodes_with_status),
+                "online": online_count,
+                "offline": offline_count,
+            }
+        },
     )
 
 

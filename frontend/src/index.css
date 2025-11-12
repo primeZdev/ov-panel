@@ -807,3 +807,48 @@ td .btn {
     color: var(--accent-color);
   }
 }
+
+/* --- Node Status Styles --- */
+.status-icon {
+  font-size: 12px;
+  fill: currentColor;
+}
+
+.status-icon.online {
+  color: var(--success-color);
+  animation: pulse-online 2s infinite;
+}
+
+.status-icon.offline {
+  color: var(--danger-color);
+}
+
+@keyframes pulse-online {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+.status-online {
+  color: var(--success-color);
+  font-weight: 600;
+}
+
+.status-offline {
+  color: var(--danger-color);
+  font-weight: 600;
+}
+
+/* Legacy status classes for backward compatibility */
+.status-active {
+  color: var(--success-color);
+  font-weight: 600;
+}
+
+.status-inactive {
+  color: var(--danger-color);
+  font-weight: 600;
+}

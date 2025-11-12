@@ -68,5 +68,12 @@
     "nodeCreatedAt": "تاریخ ایجاد",
     "noNodesFound": "هیچ نودی یافت نشد.",
     "optional": "اختیاری",
-    "deleteNodeConfirm": "آیا از حذف نود مطمئن هستید؟"
+    "deleteNodeConfirm": "آیا از حذف نود مطمئن هستید؟",
+    "status_online": "آنلاین",
+    "status_offline": "آفلاین",
+    "nodesOnline": "نودهای آنلاین",
+    "nodesOffline": "نودهای آفلاین",
+    "th_cpuUsage": "مصرف CPU",
+    "th_memoryUsage": "مصرف حافظه",
+    "th_responseTime": "زمان پاسخ"
 }
