@@ -7,7 +7,6 @@ This migration adds new fields to support health monitoring and synchronization:
 - consecutive_failures: count of consecutive failures
 - last_sync_time: timestamp of last sync
 - sync_status: current sync status (synced, pending, failed, never_synced)
-- tunnel_address: tunnel address for node connection
 
 Revision ID: health_sync_fields
 Revises: 494ff940dc52
@@ -26,9 +25,6 @@ depends_on = None
 
 
 def upgrade() -> None:
-    # Add tunnel_address field (should have been added earlier but missing)
-    op.add_column('nodes', sa.Column('tunnel_address', sa.String(), nullable=True))
-    
     # Add health check fields
     op.add_column('nodes', sa.Column('is_healthy', sa.Boolean(), nullable=False, server_default='1'))
     op.add_column('nodes', sa.Column('last_health_check', sa.DateTime(), nullable=True))
@@ -48,5 +44,5 @@ def downgrade() -> None:
     op.drop_column('nodes', 'response_time')
     op.drop_column('nodes', 'last_health_check')
     op.drop_column('nodes', 'is_healthy')
-    op.drop_column('nodes', 'tunnel_address')
+
 
