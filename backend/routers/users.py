@@ -11,7 +11,7 @@ from backend.operations.user_management import (
     delete_user_on_server,
     download_ovpn_file,
 )
-from backend.auth.auth import get_current_user
+from backend.auth.auth import get_current_user, verify_jwt_or_api_key
 from backend.node.task import (
     create_user_on_all_nodes,
     delete_user_on_all_nodes,
@@ -22,7 +22,7 @@ router = APIRouter(prefix="/user", tags=["Users"])
 
 @router.get("/all", response_model=ResponseModel)
 async def get_all_users(
-    db: Session = Depends(get_db), user: dict = Depends(get_current_user)
+    db: Session = Depends(get_db), auth: dict = Depends(verify_jwt_or_api_key)
 ):
     all_users = crud.get_all_users(db)
     users_list = [Users.from_orm(user) for user in all_users]
