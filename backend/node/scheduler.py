@@ -5,7 +5,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 from backend.logger import logger
 from sqlalchemy.orm import Session
-from backend.db.engine import SessionLocal
+from backend.db.engine import sessionLocal
 from backend.node.health_check import HealthCheckService
 from backend.node.sync import SyncService
 
@@ -19,7 +19,7 @@ class BackgroundScheduler:
     
     def get_db(self):
         """Get database session."""
-        db = SessionLocal()
+        db = sessionLocal()
         try:
             return db
         finally:
