@@ -63,6 +63,19 @@ async def login(
     return {"access_token": access_token, "token_type": "bearer"}
 
 
+@router.get("/verify-api-key")
+async def verify_api_key_endpoint(auth: dict = Depends(verify_api_key)):
+    """
+    Test endpoint to verify API Key authentication.
+    This endpoint is only accessible with a valid X-API-Key header.
+    """
+    return {
+        "success": True,
+        "message": "API Key is valid",
+        "auth_type": auth.get("type")
+    }
+
+
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"/{config.URLPATH}/login", auto_error=False)
 
 
