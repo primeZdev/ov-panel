@@ -5,7 +5,7 @@ import AddUserModal from '../components/AddUserModal';
 import EditUserModal from '../components/EditUserModal';
 import SelectNodeForDownloadModal from '../components/SelectNodeForDownloadModal';
 import UserStatCard from '../components/UserStatCard';
-import Pagination from '../components/Pagination'; 
+import Pagination from '../components/Pagination';
 import { FiUsers, FiCheckCircle, FiXCircle, FiSearch } from 'react-icons/fi';
 import { useTranslation } from 'react-i18next';
 
@@ -19,7 +19,7 @@ const UserManagement = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const { t } = useTranslation();
 
-  
+
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -67,7 +67,7 @@ const UserManagement = () => {
 
   const handleSearchChange = (event) => {
     setSearchTerm(event.target.value);
-    setCurrentPage(1); 
+    setCurrentPage(1);
   };
 
   const handleDelete = async (username) => {
@@ -81,16 +81,38 @@ const UserManagement = () => {
     }
   };
 
+  const handleToggleStatus = async (user) => {
+    const newStatus = !user.is_active;
+    const statusLabel = newStatus ? 'activate' : 'deactivate';
+    if (!window.confirm(`Are you sure you want to ${statusLabel} user ${user.name}?`)) return;
+
+    try {
+      const response = await apiClient.put(`/user/change-status`, {
+        name: user.name,
+        status: !user.is_active,
+        expiry_date: null
+      });
+      if (response.data.success) {
+        alert(`User ${statusLabel}d successfully.`);
+        fetchUsers();
+      } else {
+        alert(`Failed to ${statusLabel} user.`);
+      }
+    } catch (error) {
+      alert(`Error ${statusLabel}ing user.`);
+    }
+  };
+
   const handleOpenDownloadModal = (user) => {
     setSelectedUser(user);
     setIsDownloadModalOpen(true);
   };
-  
+
   const handleUserAdded = () => {
     setIsAddModalOpen(false);
     fetchUsers();
   };
-  
+
   const handleEdit = (user) => {
     setSelectedUser(user);
     setIsEditModalOpen(true);
@@ -109,27 +131,27 @@ const UserManagement = () => {
         <button onClick={() => setIsAddModalOpen(true)} className="btn">{t('addNewUser')}</button>
       </div>
 
-      <div className="stats-grid" style={{marginBottom: '30px'}}>
-        <UserStatCard 
-            icon={<FiUsers className="icon" />} 
-            label={t('totalUsers')} 
-            value={userStats.total}
-            color="var(--accent-color)"
-            className="card-orange"
+      <div className="stats-grid" style={{ marginBottom: '30px' }}>
+        <UserStatCard
+          icon={<FiUsers className="icon" />}
+          label={t('totalUsers')}
+          value={userStats.total}
+          color="var(--accent-color)"
+          className="card-orange"
         />
-        <UserStatCard 
-            icon={<FiCheckCircle className="icon" />} 
-            label={t('activeUsers')} 
-            value={userStats.active}
-            color="var(--success-color)"
-            className="card-green"
+        <UserStatCard
+          icon={<FiCheckCircle className="icon" />}
+          label={t('activeUsers')}
+          value={userStats.active}
+          color="var(--success-color)"
+          className="card-green"
         />
-        <UserStatCard 
-            icon={<FiXCircle className="icon" />} 
-            label={t('inactiveUsers')} 
-            value={userStats.inactive}
-            color="var(--danger-color)"
-            className="card-red"
+        <UserStatCard
+          icon={<FiXCircle className="icon" />}
+          label={t('inactiveUsers')}
+          value={userStats.inactive}
+          color="var(--danger-color)"
+          className="card-red"
         />
       </div>
 
@@ -151,11 +173,12 @@ const UserManagement = () => {
         />
       </div>
 
-      <UserTable 
-        users={paginatedUsers} 
-        onDelete={handleDelete} 
+      <UserTable
+        users={paginatedUsers}
+        onDelete={handleDelete}
         onDownload={handleOpenDownloadModal}
         onEdit={handleEdit}
+        onToggleStatus={handleToggleStatus}
       />
       {isAddModalOpen && (
         <AddUserModal
