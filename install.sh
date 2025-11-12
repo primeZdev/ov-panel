@@ -72,8 +72,9 @@ show_welcome_banner() {
 
 show_welcome_banner
 
+echo -e "${YELLOW}Updating system packages...${NC}"
 apt update -y
-apt install -y python3 python3-pip python3-venv wget curl git -y
+apt install -y python3 python3-pip python3-venv wget curl git
 
 if [ ! -d "$INSTALL_DIR" ]; then
     echo -e "${YELLOW}Cloning repository from $REPO_URL...${NC}"
@@ -89,9 +90,10 @@ cd "$INSTALL_DIR"
 echo -e "${YELLOW}Creating Python virtual environment...${NC}"
 $PYTHON -m venv venv
 
-echo -e "${YELLOW}Installing dependencies into virtual environment...${NC}"
+echo -e "${YELLOW}Installing installer dependencies...${NC}"
 source venv/bin/activate
 pip install --upgrade pip
-pip install colorama pexpect requests alembic
+pip install colorama pexpect requests
 
+echo -e "${GREEN}Starting OV-Panel installer...${NC}"
 venv/bin/python installer.py

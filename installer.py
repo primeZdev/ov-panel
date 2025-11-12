@@ -443,41 +443,41 @@ def remove_panel():
 
 
 def apply_migrations() -> None:
+    """Apply database migrations using Alembic"""
     backend_dir = "/opt/ov-panel/backend"
+    data_dir = "/opt/ov-panel/data"
     current_dir = os.getcwd()
 
     try:
+        os.makedirs(data_dir, exist_ok=True)
         os.chdir(backend_dir)
+        
         if not os.path.exists("alembic.ini"):
+            print(f"{Fore.RED}Error: alembic.ini not found{Style.RESET_ALL}")
             return
 
-        print(f"{Fore.YELLOW}Running Alembic migration...{Style.RESET_ALL}")
+        print(f"{Fore.YELLOW}Running database migrations...{Style.RESET_ALL}")
         venv_alembic = "/opt/ov-panel/venv/bin/alembic"
+        
         subprocess.run([venv_alembic, "upgrade", "head"], check=True)
+        print(f"{Fore.GREEN}Database migrations completed!{Style.RESET_ALL}")
 
-        print(f"{Fore.GREEN}Database migrated successfully!{Style.RESET_ALL}")
-
-    except subprocess.CalledProcessError:
+    except subprocess.CalledProcessError as e:
         print(f"{Fore.RED}Database migration failed!{Style.RESET_ALL}")
-    except Exception as e:
-        print(f"{Fore.RED}Unexpected error: {e}{Style.RESET_ALL}")
+        raise
     finally:
         os.chdir(current_dir)
 
 
 def install_dependencies() -> None:
     """Install Python dependencies into virtual environment"""
-    venv_dir = "/opt/ov-panel/venv"
-    venv_python = os.path.join(venv_dir, "bin", "python")
-    venv_pip = os.path.join(venv_dir, "bin", "pip")
+    venv_pip = "/opt/ov-panel/venv/bin/pip"
 
     try:
-        print(f"{Fore.YELLOW}Installing dependencies into virtual environment...{Style.RESET_ALL}")
+        print(f"{Fore.YELLOW}Installing dependencies...{Style.RESET_ALL}")
         
-        # Upgrade pip first
-        subprocess.run([venv_python, "-m", "pip", "install", "--upgrade", "pip"], check=True)
+        subprocess.run([venv_pip, "install", "--upgrade", "pip"], check=True)
         
-        # Install dependencies from pyproject.toml
         if os.path.exists("/opt/ov-panel/pyproject.toml"):
             subprocess.run([venv_pip, "install", "-e", "."], check=True, cwd="/opt/ov-panel")
         
@@ -485,9 +485,6 @@ def install_dependencies() -> None:
 
     except subprocess.CalledProcessError as e:
         print(f"{Fore.RED}Dependency installation failed: {e}{Style.RESET_ALL}")
-        raise
-    except Exception as e:
-        print(f"{Fore.RED}Unexpected error during dependency installation: {e}{Style.RESET_ALL}")
         raise
 
 
