@@ -99,6 +99,10 @@ def get_all_nodes(db: Session):
     return nodes
 
 
+def get_node_by_id(db: Session, node_id: int):
+    return db.query(Node).filter(Node.id == node_id).first()
+
+
 def get_node_by_address(db: Session, address: str):
     return db.query(Node).filter(Node.address == address).first()
 

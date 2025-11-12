@@ -3,6 +3,13 @@ from fastapi.responses import Response
 from backend.logger import logger
 import time
 from typing import Optional, Tuple
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
+from functools import partial
+
+
+# Thread pool for async operations
+_executor = ThreadPoolExecutor(max_workers=10)
 
 
 class NodeRequests:
@@ -17,8 +24,8 @@ class NodeRequests:
         protocol: str = "tcp",
         ovpn_port: int = 1194,
         set_new_setting: bool = False,
-        timeout: int = 10,  # Default timeout 10 seconds
-        max_retries: int = 2,  # Default 2 retries
+        timeout: int = 5,  # Reduced to 5 seconds
+        max_retries: int = 1,  # Reduced to 1 retry
     ):
         self.address = f"{address}:{port}"
         self.headers = {"key": api_key}
@@ -37,12 +44,13 @@ class NodeRequests:
         Returns:
             Tuple of (response, response_time_in_seconds)
         """
+        # Always set timeout
+        if "timeout" not in kwargs:
+            kwargs["timeout"] = self.timeout
+        
         for attempt in range(self.max_retries + 1):
             try:
                 start_time = time.time()
-                
-                if "timeout" not in kwargs:
-                    kwargs["timeout"] = self.timeout
                 
                 if method.upper() == "GET":
                     response = requests.get(url, **kwargs)
@@ -56,34 +64,28 @@ class NodeRequests:
                 
                 return response, response_time
                 
-            except requests.exceptions.Timeout as e:
-                logger.warning(
-                    f"Timeout on {url} (attempt {attempt + 1}/{self.max_retries + 1}): {e}"
-                )
+            except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
+                error_type = "Timeout" if isinstance(e, requests.exceptions.Timeout) else "Connection error"
                 if attempt == self.max_retries:
-                    logger.error(f"Max retries reached for {url}")
-                    return None, None
-                    
-            except requests.exceptions.ConnectionError as e:
-                logger.warning(
-                    f"Connection error on {url} (attempt {attempt + 1}/{self.max_retries + 1}): {e}"
-                )
-                if attempt == self.max_retries:
-                    logger.error(f"Max retries reached for {url}")
+                    logger.warning(f"{error_type} on {url} after {attempt + 1} attempts")
                     return None, None
                     
             except requests.exceptions.RequestException as e:
-                logger.error(f"Request error on {url}: {e}")
+                logger.warning(f"Request error on {url}: {str(e)[:100]}")
                 return None, None
-                
-            # Wait before retry (exponential backoff)
-            if attempt < self.max_retries:
-                time.sleep(2 ** attempt)
         
         return None, None
+    
+    async def _make_request_async(
+        self, method: str, url: str, **kwargs
+    ) -> Tuple[Optional[requests.Response], Optional[float]]:
+        """Async wrapper for _make_request using thread pool."""
+        loop = asyncio.get_event_loop()
+        func = partial(self._make_request, method, url, **kwargs)
+        return await loop.run_in_executor(_executor, func)
 
     def check_node(self) -> Tuple[bool, Optional[float]]:
-        """Checks the node status and sets new settings if necesary.
+        """Checks the node status and sets new settings if necessary.
         
         Returns:
             Tuple of (is_healthy, response_time)
@@ -105,14 +107,52 @@ class NodeRequests:
                 json_data = response.json()
                 if json_data.get("success"):
                     return True, response_time
-                else:
-                    logger.error(f"Node {self.address} is not reachable")
-                    return False, response_time
-            except Exception as e:
-                logger.error(f"Error parsing response from {self.address}: {e}")
-                return False, response_time
+            except Exception:
+                pass
         
         return False, None
+    
+    async def check_node_async(self) -> Tuple[bool, Optional[float]]:
+        """Async version of check_node."""
+        api = f"http://{self.address}/sync/get-status"
+        data = {
+            "tunnel_address": self.tunnel_addres,
+            "protocol": self.protocol,
+            "ovpn_port": self.ovpn_port,
+            "set_new_setting": self.set_new_setting,
+        }
+        
+        response, response_time = await self._make_request_async(
+            "POST", api, headers=self.headers, json=data
+        )
+        
+        if response and response.status_code == 200:
+            try:
+                json_data = response.json()
+                if json_data.get("success"):
+                    return True, response_time
+            except Exception:
+                pass
+        
+        return False, None
+
+    async def get_node_info_async(self) -> dict:
+        """Async version to get detailed node information."""
+        api = f"http://{self.address}/sync/get-status"
+        
+        response, response_time = await self._make_request_async("GET", api, headers=self.headers)
+        
+        if response and response.status_code == 200:
+            try:
+                json_data = response.json()
+                if json_data.get("success"):
+                    data = json_data.get("data", {})
+                    data["response_time"] = response_time
+                    return data
+            except Exception:
+                pass
+        
+        return {}
 
     def get_node_info(self) -> dict:
         """Get detailed node information."""
@@ -127,14 +167,8 @@ class NodeRequests:
                     data = json_data.get("data", {})
                     data["response_time"] = response_time
                     return data
-                else:
-                    logger.error(
-                        f"Failed to get node info on {self.address}: {json_data.get('msg')}"
-                    )
-                    return {}
-            except Exception as e:
-                logger.error(f"Error parsing node info from {self.address}: {e}")
-                return {}
+            except Exception:
+                pass
         
         return {}
 

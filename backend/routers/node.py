@@ -67,11 +67,43 @@ async def list_nodes(
     db: Session = Depends(get_db),
     user: dict = Depends(get_current_user),
 ):
+    """Get all nodes with their cached health status.
+    
+    This endpoint returns immediately with cached health data.
+    It does NOT perform live health checks to avoid blocking.
+    Use /health-check/all for live health checks.
+    """
     nodes = await list_nodes_handler(db)
     return ResponseModel(
         success=True,
         msg="Nodes retrieved successfully",
         data=nodes,
+    )
+
+
+@router.get("/list/healthy", response_model=ResponseModel)
+async def list_healthy_nodes(
+    db: Session = Depends(get_db),
+    user: dict = Depends(get_current_user),
+):
+    """Get only healthy and active nodes for download selection."""
+    from backend.db import crud
+    
+    all_nodes = crud.get_all_nodes(db)
+    healthy_nodes = [
+        {
+            "name": node.name,
+            "address": node.address,
+            "response_time": round(node.response_time, 3) if node.response_time else None,
+        }
+        for node in all_nodes
+        if node.status and node.is_healthy
+    ]
+    
+    return ResponseModel(
+        success=True,
+        msg=f"Found {len(healthy_nodes)} healthy nodes",
+        data=healthy_nodes,
     )
 
 
@@ -85,16 +117,31 @@ async def download_ovpn_client(
     db: Session = Depends(get_db),
     user: dict = Depends(get_current_user),
 ):
+    """Download OVPN from specific node with health validation."""
     response = await download_ovpn_client_from_node(
         name=name, node_address=address, db=db
     )
     if response:
         return response
     else:
-        raise HTTPException(
-            status_code=404,
-            detail="OVPN file not found or node is unhealthy"
-        )
+        # Get node to provide better error message
+        from backend.db import crud
+        node = crud.get_node_by_address(db, address)
+        
+        if not node:
+            raise HTTPException(status_code=404, detail="Node not found")
+        elif not node.status:
+            raise HTTPException(status_code=400, detail="Node is inactive")
+        elif not node.is_healthy:
+            raise HTTPException(
+                status_code=503,
+                detail=f"Node is unhealthy (last check: {node.last_health_check})"
+            )
+        else:
+            raise HTTPException(
+                status_code=500,
+                detail="Failed to download OVPN file from node"
+            )
 
 
 @router.get(
@@ -113,7 +160,7 @@ async def download_ovpn_from_best(
     else:
         raise HTTPException(
             status_code=503,
-            detail="No healthy nodes available for download"
+            detail="No healthy nodes available for download. Please try again later or contact administrator."
         )
 
 

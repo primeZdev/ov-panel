@@ -6,6 +6,7 @@ from backend.node.requests import NodeRequests
 from backend.logger import logger
 from typing import List
 import asyncio
+from datetime import datetime, timedelta
 
 
 class HealthCheckService:
@@ -15,7 +16,7 @@ class HealthCheckService:
         self.db = db
 
     async def check_node_health(self, node) -> dict:
-        """Check health of a single node.
+        """Check health of a single node with async request.
         
         Returns:
             dict with health status information
@@ -25,11 +26,12 @@ class HealthCheckService:
                 address=node.address,
                 port=node.port,
                 api_key=node.key,
-                timeout=5,  # 5 second timeout for health checks
-                max_retries=1,  # Only 1 retry for health checks
+                timeout=3,  # 3 second timeout for health checks
+                max_retries=0,  # No retries for health checks
             )
             
-            is_healthy, response_time = node_request.check_node()
+            # Use async version
+            is_healthy, response_time = await node_request.check_node_async()
             
             # Update consecutive failures
             if is_healthy:
@@ -46,11 +48,9 @@ class HealthCheckService:
                 consecutive_failures=consecutive_failures,
             )
             
-            logger.info(
-                f"Health check for node {node.address}: "
-                f"{'healthy' if is_healthy else 'unhealthy'} "
-                f"(response_time: {response_time}s, failures: {consecutive_failures})"
-            )
+            status_msg = "healthy" if is_healthy else "unhealthy"
+            time_msg = f"({response_time:.3f}s)" if response_time else "timeout"
+            logger.info(f"Health check for node {node.address}: {status_msg} {time_msg}")
             
             return {
                 "node_id": node.id,

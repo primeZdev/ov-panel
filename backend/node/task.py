@@ -1,5 +1,6 @@
 from fastapi.responses import Response
 from sqlalchemy.orm import Session
+import asyncio
 
 from backend.logger import logger
 from backend.schema._input import NodeCreate
@@ -19,8 +20,12 @@ async def add_node_handler(request: NodeCreate, db: Session) -> bool:
         request.protocol,
         request.ovpn_port,
         request.set_new_setting,
+        timeout=5,
+        max_retries=1,
     )
-    is_healthy, response_time = new_node.check_node()
+    
+    # Use async health check
+    is_healthy, response_time = await new_node.check_node_async()
     
     if is_healthy:
         # Create node in database
@@ -36,14 +41,24 @@ async def add_node_handler(request: NodeCreate, db: Session) -> bool:
         
         logger.info(f"Node added successfully: {request.address}:{request.port}")
         
-        # Sync all users to new node in background
-        sync_service = SyncService(db)
-        await sync_service.sync_all_users_to_node(node)
+        # Sync all users to new node in background (don't await)
+        asyncio.create_task(_sync_node_background(node.id, db))
         
         return True
     else:
-        logger.warning(f"Failed to add node: {request.address}:{request.port}")
+        logger.warning(f"Failed to add node - unhealthy: {request.address}:{request.port}")
         return False
+
+
+async def _sync_node_background(node_id: int, db: Session):
+    """Background task to sync node."""
+    try:
+        node = crud.get_node_by_id(db, node_id)
+        if node:
+            sync_service = SyncService(db)
+            await sync_service.sync_all_users_to_node(node)
+    except Exception as e:
+        logger.error(f"Background sync failed for node {node_id}: {e}")
 
 
 async def update_node_handler(address: str, request: NodeCreate, db: Session) -> None:
@@ -66,9 +81,14 @@ async def delete_node_handler(address: str, db: Session) -> bool:
 
 
 async def list_nodes_handler(db: Session) -> list:
-    """Retrieve all nodes with health status."""
+    """Retrieve all nodes with current health status from database only.
+    
+    Does NOT perform health checks here to avoid blocking.
+    Health checks are done by scheduled background tasks.
+    """
     nodes_list = []
     nodes = crud.get_all_nodes(db)
+    
     for node in nodes:
         # Determine actual status based on health and status
         is_active = node.status and node.is_healthy
@@ -82,13 +102,14 @@ async def list_nodes_handler(db: Session) -> list:
             "port": node.port,
             "status": "active" if is_active else "inactive",
             "is_healthy": node.is_healthy,
-            "response_time": node.response_time,
+            "response_time": round(node.response_time, 3) if node.response_time else None,
             "last_health_check": str(node.last_health_check) if node.last_health_check else None,
             "sync_status": node.sync_status,
             "last_sync_time": str(node.last_sync_time) if node.last_sync_time else None,
             "consecutive_failures": node.consecutive_failures,
         }
         nodes_list.append(node_info)
+    
     return nodes_list
 
 
@@ -109,19 +130,36 @@ async def create_user_on_all_nodes(name: str, db: Session):
 
 
 async def get_node_status_handler(address: str, db: Session):
-    """Get the status of a node"""
+    """Get the status of a node with quick async check."""
     node = crud.get_node_by_address(db, address)
-    if node:
-        node_status = NodeRequests(
-            address=node.address, port=node.port, api_key=node.key
-        ).get_node_info()
-        return {
-            "address": node.address,
-            "port": node.port,
-            "status": "active" if node.status else "inactive",
-            "node_info": node_status,
-        }
-    return None
+    if not node:
+        return None
+    
+    # Only fetch fresh status if node is marked healthy
+    node_info = {}
+    if node.is_healthy and node.status:
+        try:
+            node_request = NodeRequests(
+                address=node.address,
+                port=node.port,
+                api_key=node.key,
+                timeout=3,  # Quick timeout
+                max_retries=0,  # No retries
+            )
+            node_info = await node_request.get_node_info_async()
+        except Exception as e:
+            logger.warning(f"Failed to get live info for node {address}: {e}")
+            node_info = {"error": "Failed to fetch live data"}
+    
+    return {
+        "address": node.address,
+        "port": node.port,
+        "status": "active" if (node.status and node.is_healthy) else "inactive",
+        "is_healthy": node.is_healthy,
+        "last_health_check": str(node.last_health_check) if node.last_health_check else None,
+        "response_time": node.response_time,
+        "node_info": node_info,
+    }
 
 
 async def download_ovpn_client_from_node(
@@ -134,34 +172,61 @@ async def download_ovpn_client_from_node(
         logger.error(f"Node not found: {node_address}")
         return None
     
-    # Check if node is healthy before allowing download
-    if not node.is_healthy or not node.status:
+    # CRITICAL: Check if node is healthy before allowing download
+    if not node.is_healthy:
         logger.warning(
             f"Cannot download from unhealthy node {node_address}. "
-            f"Status: {node.status}, Healthy: {node.is_healthy}"
+            f"Health status: {node.is_healthy}, Last check: {node.last_health_check}"
         )
         return None
     
-    # Check sync status
+    if not node.status:
+        logger.warning(f"Cannot download from inactive node {node_address}")
+        return None
+    
+    # Check sync status - warn but allow if synced or pending
     if node.sync_status not in ["synced", "pending"]:
         logger.warning(
             f"Node {node_address} has sync_status '{node.sync_status}', "
-            f"may not have latest data"
+            f"may not have latest data. Last sync: {node.last_sync_time}"
         )
     
-    result = NodeRequests(
-        address=node.address, port=node.port, api_key=node.key
-    ).download_ovpn_client(f"{name}-{node.name}")
-    
-    if result:
-        logger.info(
-            f"OVPN client downloaded for user '{name}-{node.name}' on node {node.address}:{node.port}"
+    try:
+        # Use short timeout for download attempt
+        result = NodeRequests(
+            address=node.address,
+            port=node.port,
+            api_key=node.key,
+            timeout=10,  # 10 seconds for download
+            max_retries=0,
+        ).download_ovpn_client(f"{name}-{node.name}")
+        
+        if result:
+            logger.info(
+                f"OVPN client downloaded for user '{name}-{node.name}' from node {node.address}"
+            )
+            return result
+        
+        # If download failed, mark node as potentially unhealthy
+        logger.error(
+            f"Failed to download OVPN for user '{name}-{node.name}' from node {node.address}"
         )
-        return result
+        crud.update_node_health(
+            db,
+            node.id,
+            is_healthy=False,
+            consecutive_failures=node.consecutive_failures + 1,
+        )
+        
+    except Exception as e:
+        logger.error(f"Exception downloading from node {node_address}: {e}")
+        crud.update_node_health(
+            db,
+            node.id,
+            is_healthy=False,
+            consecutive_failures=node.consecutive_failures + 1,
+        )
     
-    logger.error(
-        f"Failed to download OVPN for user '{name}-{node.name}' from node {node.address}"
-    )
     return None
 
 
