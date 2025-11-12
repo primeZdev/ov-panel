@@ -11,6 +11,8 @@ from backend.operations.daily_checks import check_user_expiry_date
 from backend.config import config
 from backend.routers import all_routers
 from backend.version import __version__
+from backend.node.scheduler import scheduler as node_scheduler
+from backend.logger import logger
 
 
 api = FastAPI(
@@ -53,6 +55,23 @@ def start_scheduler():
 @api.on_event("startup")
 async def startup_event():
     start_scheduler()
+    
+    # Start node health check and sync scheduler
+    try:
+        node_scheduler.start()
+        logger.info("Node health check and sync scheduler started")
+    except Exception as e:
+        logger.error(f"Failed to start node scheduler: {e}")
+
+
+@api.on_event("shutdown")
+async def shutdown_event():
+    """Cleanup on shutdown."""
+    try:
+        node_scheduler.stop()
+        logger.info("Node scheduler stopped")
+    except Exception as e:
+        logger.error(f"Error stopping node scheduler: {e}")
 
 
 @api.get(f"/{config.URLPATH}")

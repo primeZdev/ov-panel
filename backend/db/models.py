@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Mapped, mapped_column
 from .engine import Base
-from datetime import date
+from datetime import date, datetime
+from typing import Optional
 
 
 class User(Base):
@@ -33,6 +34,16 @@ class Node(Base):
     port: Mapped[int] = mapped_column()
     key: Mapped[str] = mapped_column(nullable=False)
     status: Mapped[bool] = mapped_column(default=True)
+    
+    # Health check fields
+    is_healthy: Mapped[bool] = mapped_column(default=True)
+    last_health_check: Mapped[Optional[datetime]] = mapped_column(nullable=True)
+    response_time: Mapped[Optional[float]] = mapped_column(nullable=True)  # in seconds
+    consecutive_failures: Mapped[int] = mapped_column(default=0)
+    
+    # Sync fields
+    last_sync_time: Mapped[Optional[datetime]] = mapped_column(nullable=True)
+    sync_status: Mapped[str] = mapped_column(default="synced")  # synced, pending, failed, never_synced
 
 
 class Settings(Base):
