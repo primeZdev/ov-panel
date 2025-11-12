@@ -1,5 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Header
-from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
+from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer, APIKeyHeader
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
 from jose import JWTError, jwt
@@ -14,6 +14,9 @@ ALGORITHM = "HS256"
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 router = APIRouter(tags=["Login"])
+
+# API Key security scheme for Swagger UI
+api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
 
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
@@ -83,7 +86,7 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
 
 # ==================== NEW API KEY AUTHENTICATION ====================
 
-def verify_api_key(x_api_key: Optional[str] = Header(None, alias="X-API-Key")) -> dict:
+def verify_api_key(api_key: Optional[str] = Depends(api_key_header)) -> dict:
     """
     Verify API key from X-API-Key header.
     This is for external integrations that need to access the API.
@@ -103,14 +106,14 @@ def verify_api_key(x_api_key: Optional[str] = Header(None, alias="X-API-Key")) -
             detail="API Key authentication is not configured on this server",
         )
     
-    if not x_api_key:
+    if not api_key:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Missing X-API-Key header",
             headers={"WWW-Authenticate": "ApiKey"},
         )
     
-    if x_api_key != config.API_KEY:
+    if api_key != config.API_KEY:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid API Key",
@@ -122,7 +125,7 @@ def verify_api_key(x_api_key: Optional[str] = Header(None, alias="X-API-Key")) -
 
 def verify_jwt_or_api_key(
     token: Optional[str] = Depends(oauth2_scheme),
-    x_api_key: Optional[str] = Header(None, alias="X-API-Key")
+    api_key: Optional[str] = Depends(api_key_header)
 ) -> dict:
     """
     Accept either JWT Bearer token OR API Key authentication.
@@ -137,13 +140,13 @@ def verify_jwt_or_api_key(
         dict with authentication info
     """
     # Try API Key first if provided
-    if x_api_key:
+    if api_key:
         if not config.API_KEY:
             raise HTTPException(
                 status_code=status.HTTP_501_NOT_IMPLEMENTED,
                 detail="API Key authentication is not configured",
             )
-        if x_api_key == config.API_KEY:
+        if api_key == config.API_KEY:
             return {"type": "api_key", "authenticated": True}
         else:
             raise HTTPException(
