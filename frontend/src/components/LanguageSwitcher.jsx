@@ -114,18 +114,19 @@ const LanguageSwitcher = () => {
           align-items: center;
           gap: 8px;
           padding: 8px 12px;
-          background: transparent;
-          border: 1px solid #e5e7eb;
+          background: var(--background-primary);
+          border: 1px solid var(--border-color);
           border-radius: 8px;
           cursor: pointer;
           transition: all 0.2s ease;
           font-size: 14px;
-          color: #374151;
+          color: var(--text-primary);
+          width: 100%;
         }
 
         .language-button:hover {
-          background: #f9fafb;
-          border-color: #d1d5db;
+          background: var(--background-card-hover);
+          border-color: var(--accent-color);
         }
 
         .flag {
@@ -139,7 +140,8 @@ const LanguageSwitcher = () => {
 
         .arrow {
           transition: transform 0.2s ease;
-          color: #6b7280;
+          color: var(--text-secondary);
+          margin-left: auto;
         }
 
         .arrow.open {
@@ -148,23 +150,23 @@ const LanguageSwitcher = () => {
 
         .language-dropdown {
           position: absolute;
-          top: calc(100% + 8px);
+          bottom: calc(100% + 8px);
+          left: 0;
           right: 0;
-          background: white;
-          border: 1px solid #e5e7eb;
+          background: var(--background-card-hover);
+          border: 1px solid var(--border-color);
           border-radius: 8px;
-          box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
-                      0 4px 6px -2px rgba(0, 0, 0, 0.05);
-          min-width: 180px;
+          box-shadow: 0 -10px 25px -3px rgba(0, 0, 0, 0.5),
+                      0 -4px 6px -2px rgba(0, 0, 0, 0.3);
           overflow: hidden;
           z-index: 1000;
-          animation: slideDown 0.2s ease;
+          animation: slideUp 0.2s ease;
         }
 
-        @keyframes slideDown {
+        @keyframes slideUp {
           from {
             opacity: 0;
-            transform: translateY(-10px);
+            transform: translateY(10px);
           }
           to {
             opacity: 1;
@@ -183,17 +185,17 @@ const LanguageSwitcher = () => {
           cursor: pointer;
           transition: background 0.2s ease;
           font-size: 14px;
-          color: #374151;
+          color: var(--text-primary);
           text-align: left;
         }
 
         .language-option:hover {
-          background: #f9fafb;
+          background: var(--background-secondary);
         }
 
         .language-option.active {
-          background: #eff6ff;
-          color: #2563eb;
+          background: var(--accent-color-transparent);
+          color: var(--accent-color);
         }
 
         .language-option .language-name {
@@ -201,38 +203,7 @@ const LanguageSwitcher = () => {
         }
 
         .check-icon {
-          color: #2563eb;
-        }
-
-        /* Dark mode support */
-        @media (prefers-color-scheme: dark) {
-          .language-button {
-            color: #f9fafb;
-            border-color: #374151;
-          }
-
-          .language-button:hover {
-            background: #1f2937;
-            border-color: #4b5563;
-          }
-
-          .language-dropdown {
-            background: #1f2937;
-            border-color: #374151;
-          }
-
-          .language-option {
-            color: #f9fafb;
-          }
-
-          .language-option:hover {
-            background: #111827;
-          }
-
-          .language-option.active {
-            background: #1e3a8a;
-            color: #93c5fd;
-          }
+          color: var(--accent-color);
         }
       `}</style>
         </div>

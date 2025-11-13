@@ -3,7 +3,7 @@ import Sidebar from '../components/Sidebar';
 import MobileNav from '../components/MobileNav'; 
 import { useAuth } from '../context/AuthContext';
 import { useTranslation } from 'react-i18next';
-import { FiLogOut, FiRefreshCw, FiGithub, FiSend, FiGlobe } from 'react-icons/fi';
+import { FiLogOut, FiRefreshCw, FiGithub, FiSend } from 'react-icons/fi';
 import logoSrc from '../assets/Logo-Landscape-Dark.webp'; 
 
 const DashboardLayout = () => {
@@ -12,12 +12,6 @@ const DashboardLayout = () => {
 
   const handleRefresh = () => {
     window.location.reload();
-  };
-
-  const changeLanguage = () => {
-    const newLang = i18n.language === 'en' ? 'fa' : 'en';
-    i18n.changeLanguage(newLang);
-    document.documentElement.dir = newLang === 'fa' ? 'rtl' : 'ltr';
   };
 
   return (
@@ -36,9 +30,6 @@ const DashboardLayout = () => {
             <a href="https://github.com/primeZdev/ov-panel" target="_blank" rel="noopener noreferrer" className="action-btn">
               <FiGithub size={18} />
             </a>
-            <button onClick={changeLanguage} className="action-btn">
-              <FiGlobe size={18} />
-            </button>
             <button onClick={handleRefresh} className="action-btn">
               <FiRefreshCw size={18} />
             </button>
