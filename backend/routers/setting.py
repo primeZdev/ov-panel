@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from backend.db.engine import get_db
 from backend.db import crud
-from backend.auth.auth import get_current_user
+from backend.auth.auth import verify_jwt_or_api_key
 from backend.operations.server_info import get_server_info
 from backend.schema._input import SettingsUpdate
 from backend.schema.output import Settings, ServerInfo, ResponseModel
@@ -14,7 +14,7 @@ router = APIRouter(prefix="/settings", tags=["Panel Settings"])
 
 @router.get("/", response_model=ResponseModel)
 async def get_settings(
-    db: Session = Depends(get_db), user: str = Depends(get_current_user)
+    db: Session = Depends(get_db), auth: dict = Depends(verify_jwt_or_api_key)
 ):
     settings = crud.get_settings(db)
     return ResponseModel(
@@ -28,7 +28,7 @@ async def get_settings(
 async def update_settings(
     request: SettingsUpdate,
     db: Session = Depends(get_db),
-    user: str = Depends(get_current_user),
+    auth: dict = Depends(verify_jwt_or_api_key),
 ):
     update = crud.update_settings(db, request)
     if update:
@@ -43,7 +43,7 @@ async def update_settings(
     response_model=ResponseModel,
     description="Get server information (cpu, memory, ...)",
 )
-async def get_server_information(user: dict = Depends(get_current_user)):
+async def get_server_information(auth: dict = Depends(verify_jwt_or_api_key)):
     result = await get_server_info()
     return ResponseModel(
         success=True,

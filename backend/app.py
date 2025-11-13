@@ -11,6 +11,8 @@ from backend.operations.daily_checks import check_user_expiry_date
 from backend.config import config
 from backend.routers import all_routers
 from backend.version import __version__
+from backend.node.scheduler import scheduler as node_scheduler
+from backend.logger import logger
 
 
 api = FastAPI(
@@ -53,6 +55,23 @@ def start_scheduler():
 @api.on_event("startup")
 async def startup_event():
     start_scheduler()
+    
+    # Start node health check and sync scheduler
+    try:
+        node_scheduler.start()
+        logger.info("Node health check and sync scheduler started")
+    except Exception as e:
+        logger.error(f"Failed to start node scheduler: {e}")
+
+
+@api.on_event("shutdown")
+async def shutdown_event():
+    """Cleanup on shutdown."""
+    try:
+        node_scheduler.stop()
+        logger.info("Node scheduler stopped")
+    except Exception as e:
+        logger.error(f"Error stopping node scheduler: {e}")
 
 
 @api.get(f"/{config.URLPATH}")
@@ -63,3 +82,21 @@ async def serve_react():
 
 for router in all_routers:
     api.include_router(prefix="/api", router=router)
+
+
+# Catch-all route for SPA routing - must be AFTER all API routes
+@api.get("/{full_path:path}")
+async def serve_react_app(full_path: str):
+    """Serve React app for all non-API routes to support client-side routing."""
+    # Don't serve index.html for API routes or assets
+    if full_path.startswith("api/") or full_path.startswith("assets/"):
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="Not found")
+    
+    # Serve index.html for all other routes
+    index_path = os.path.join(frontend_build_path, "index.html")
+    if os.path.exists(index_path):
+        return FileResponse(index_path)
+    else:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=500, detail="Frontend not built")

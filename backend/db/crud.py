@@ -99,6 +99,10 @@ def get_all_nodes(db: Session):
     return nodes
 
 
+def get_node_by_id(db: Session, node_id: int):
+    return db.query(Node).filter(Node.id == node_id).first()
+
+
 def get_node_by_address(db: Session, address: str):
     return db.query(Node).filter(Node.address == address).first()
 
@@ -168,3 +172,97 @@ def update_settings(db: Session, request: SettingsUpdate):
     db.commit()
     db.refresh(settings)
     return settings
+
+
+# Node health and sync management
+def update_node_health(
+    db: Session,
+    node_id: int,
+    is_healthy: bool,
+    response_time: float = None,
+    consecutive_failures: int = 0,
+):
+    """Update node health status."""
+    from datetime import datetime
+
+    node = db.query(Node).filter(Node.id == node_id).first()
+    if not node:
+        raise HTTPException(status_code=404, detail="Node not found")
+
+    node.is_healthy = is_healthy
+    node.last_health_check = datetime.now()
+    node.response_time = response_time
+    node.consecutive_failures = consecutive_failures
+    
+    # Auto-update status based on health
+    if consecutive_failures >= 3:
+        node.status = False
+        
+    db.commit()
+    db.refresh(node)
+    return node
+
+
+def update_node_sync_status(
+    db: Session, node_id: int, sync_status: str
+):
+    """Update node sync status."""
+    from datetime import datetime
+
+    node = db.query(Node).filter(Node.id == node_id).first()
+    if not node:
+        raise HTTPException(status_code=404, detail="Node not found")
+
+    node.sync_status = sync_status
+    if sync_status == "synced":
+        node.last_sync_time = datetime.now()
+    
+    db.commit()
+    db.refresh(node)
+    return node
+
+
+def get_healthy_nodes(db: Session):
+    """Get all healthy and active nodes."""
+    return (
+        db.query(Node)
+        .filter(Node.status == True, Node.is_healthy == True)
+        .all()
+    )
+
+
+def get_nodes_needing_sync(db: Session):
+    """Get nodes that need synchronization."""
+    return (
+        db.query(Node)
+        .filter(
+            Node.status == True,
+            Node.is_healthy == True,
+            Node.sync_status.in_(["pending", "failed", "never_synced"])
+        )
+        .all()
+    )
+
+
+def get_best_node_for_download(db: Session):
+    """Get the best node for downloading OVPN based on health and performance."""
+    from sqlalchemy import func
+    
+    # Get healthy nodes sorted by response time
+    node = (
+        db.query(Node)
+        .filter(
+            Node.status == True,
+            Node.is_healthy == True,
+            Node.sync_status == "synced",
+            Node.consecutive_failures == 0
+        )
+        .order_by(Node.response_time.asc())
+        .first()
+    )
+    
+    if not node:
+        # Fallback to any active node
+        node = db.query(Node).filter(Node.status == True).first()
+    
+    return node
