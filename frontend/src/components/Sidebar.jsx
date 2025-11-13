@@ -1,7 +1,8 @@
 import { NavLink } from 'react-router-dom';
 import { FiGrid, FiUsers, FiServer, FiSettings } from 'react-icons/fi';
 import { useTranslation } from 'react-i18next';
-import logoSrc from '../assets/Logo-Landscape-Dark.webp'; 
+import logoSrc from '../assets/Logo-Landscape-Dark.webp';
+import LanguageSwitcher from './LanguageSwitcher'; 
 
 const Sidebar = () => {
   const { t } = useTranslation();
@@ -52,6 +53,9 @@ const Sidebar = () => {
           </li>
         </ul>
       </nav>
+      <div className="sidebar-footer">
+        <LanguageSwitcher />
+      </div>
     </aside>
   );
 };

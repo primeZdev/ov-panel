@@ -204,6 +204,12 @@ body {
   margin: 0;
 }
 
+.sidebar-footer {
+  margin-top: auto;
+  padding-top: 20px;
+  border-top: 1px solid var(--border-color);
+}
+
 .nav-link {
   display: flex;
   align-items: center;
