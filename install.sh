@@ -3,7 +3,7 @@ set -e
 
 APP_NAME="ov-panel"
 INSTALL_DIR="/opt/$APP_NAME"
-REPO_URL="https://github.com/VPNOS/ov-panel"
+REPO_URL="https://github.com/primeZdev/ov-panel"
 PYTHON="/usr/bin/python3"
 
 GREEN="\033[0;32m"
