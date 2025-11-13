@@ -2,7 +2,7 @@ import { NavLink } from 'react-router-dom';
 import { FiGrid, FiUsers, FiServer, FiSettings } from 'react-icons/fi';
 import { useTranslation } from 'react-i18next';
 import logoSrc from '../assets/Logo-Landscape-Dark.webp';
-import LanguageSwitcher from './LanguageSwitcher'; 
+import LanguageSwitcher from './LanguageSwitcher';
 
 const Sidebar = () => {
   const { t } = useTranslation();
@@ -11,9 +11,9 @@ const Sidebar = () => {
     <aside className="sidebar">
       <div className="sidebar-header">
         {/* اصلاح: تگ img مستقیماً با کلاس جدید استایل‌دهی می‌شود */}
-        <img 
-          src={logoSrc} 
-          alt="Panel Logo" 
+        <img
+          src={logoSrc}
+          alt="Panel Logo"
           className="sidebar-logo" // کلاس جدید برای استایل‌دهی
         />
       </div>

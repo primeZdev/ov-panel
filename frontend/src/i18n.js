@@ -24,11 +24,11 @@ i18n
   .use(initReactI18next)
   .init({
     resources,
-    lng: savedLanguage, 
-    fallbackLng: 'en', 
+    lng: savedLanguage,
+    fallbackLng: 'en',
 
     interpolation: {
-      escapeValue: false, 
+      escapeValue: false,
     },
   });
 
