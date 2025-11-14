@@ -30,7 +30,7 @@ const EditNodeModal = ({ node, onClose, onNodeUpdated }) => {
         ovpn_port: node.ovpn_port || 1194,
         port: node.port || 0,
         key: node.key || '',
-        status: node.status ?? true,
+        status: node.status === 'active' || node.status === true,
         set_new_setting: true,
       });
       setOriginalAddress(node.address);
@@ -54,6 +54,7 @@ const EditNodeModal = ({ node, onClose, onNodeUpdated }) => {
       ...formData,
       ovpn_port: Number(formData.ovpn_port),
       port: Number(formData.port),
+      status: Boolean(formData.status),
     };
 
     try {
@@ -70,7 +71,7 @@ const EditNodeModal = ({ node, onClose, onNodeUpdated }) => {
       setIsLoading(false);
     }
   };
-  
+
   if (!node) return null;
 
   return (
@@ -124,7 +125,7 @@ const EditNodeModal = ({ node, onClose, onNodeUpdated }) => {
             <input type="checkbox" id="edit-status" name="status" checked={formData.status} onChange={handleChange} />
             <label htmlFor="edit-status" style={{ marginBottom: 0 }}>{t('status_active')}</label>
           </div>
-          
+
           <div className="modal-footer">
             <button type="button" onClick={onClose} className="btn btn-secondary">{t('cancelButton')}</button>
             <LoadingButton isLoading={isLoading} type="submit" className="btn">

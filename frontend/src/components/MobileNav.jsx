@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { FiGrid, FiUsers, FiServer, FiSettings } from 'react-icons/fi';
+import { FiGrid, FiUsers, FiServer } from 'react-icons/fi';
 import { useTranslation } from 'react-i18next';
 
 const MobileNav = () => {
@@ -18,10 +18,6 @@ const MobileNav = () => {
       <NavLink to="/nodes" className="mobile-nav-link">
         <FiServer size={22} />
         <span>{t('nodes')}</span>
-      </NavLink>
-      <NavLink to="/settings" className="mobile-nav-link">
-        <FiSettings size={22} />
-        <span>{t('settings')}</span>
       </NavLink>
     </nav>
   );
