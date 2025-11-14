@@ -63,6 +63,22 @@ async def list_nodes_handler(db: Session) -> list:
     return nodes_list
 
 
+async def get_node_status_handler(address: str, db: Session):
+    """Get the status of a node"""
+    node = crud.get_node_by_address(db, address)
+    if node:
+        node_status = NodeRequests(
+            address=node.address, port=node.port, api_key=node.key
+        ).get_node_info()
+        return {
+            "address": node.address,
+            "port": node.port,
+            "status": "active" if node.status and node_status else "inactive",
+            "node_info": node_status,
+        }
+    return None
+
+
 async def create_user_on_all_nodes(name: str, db: Session):
     """Create a user on all nodes"""
     nodes = crud.get_all_nodes(db)
@@ -83,20 +99,25 @@ async def create_user_on_all_nodes(name: str, db: Session):
                 )
 
 
-async def get_node_status_handler(address: str, db: Session):
-    """Get the status of a node"""
-    node = crud.get_node_by_address(db, address)
-    if node:
-        node_status = NodeRequests(
-            address=node.address, port=node.port, api_key=node.key
-        ).get_node_info()
-        return {
-            "address": node.address,
-            "port": node.port,
-            "status": "active" if node.status else "inactive",
-            "node_info": node_status,
-        }
-    return None
+async def change_user_status_on_all_nodes(name: str, status: bool, db: Session):
+    nodes = crud.get_all_nodes(db)
+    crud.change_user_status(db, name, status)
+
+    if nodes:
+        for node in nodes:
+            node_request = NodeRequests(
+                address=node.address, port=node.port, api_key=node.key
+            )
+            node_status = node_request.check_node()
+            if node_status:
+                node_request.change_user_status(f"{name}-{node.name}", status)
+                logger.info(
+                    f"User '{name}-{node.name}' changed status on node {node.address}:{node.port}"
+                )
+            else:
+                logger.warning(
+                    f"Failed to chang user status '{name}-{node.name}' on node {node.address}:{node.port}"
+                )
 
 
 async def download_ovpn_client_from_node(

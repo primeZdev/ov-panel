@@ -12,6 +12,7 @@ class CreateUser(BaseModel):
 class UpdateUser(BaseModel):
     name: str
     expiry_date: Optional[date]
+    status: bool = True
 
 
 class NodeCreate(BaseModel):

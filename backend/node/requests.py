@@ -48,7 +48,7 @@ class NodeRequests:
         try:
             response = requests.get(api, headers=self.headers).json()
             if response.get("success"):
-                return response.get("data")
+                return True, response.get("data")
             else:
                 logger.error(
                     f"Failed to get node info on {self.address}: {response.get('msg')}"
@@ -74,8 +74,22 @@ class NodeRequests:
             logger.error(f"Error creating user on node {self.address}: {e}")
             return False
 
-    # def update_user(self):
-    #     pass
+    def change_user_status(self, name, status):
+        api = f"http://{self.address}/sync/change-user-status"
+        try:
+            data = {"name": name, "status": "activate" if status else "deactivate"}
+            response = requests.post(api, headers=self.headers, json=data).json()
+
+            if response.get("success"):
+                return True
+            else:
+                logger.error(
+                    f"Failed to change user status on node {self.address}: {response.get('msg')}"
+                )
+                return False
+        except Exception as e:
+            logger.error(f"Error change user status on node {self.address}: {e}")
+            return False
 
     def download_ovpn_client(self, name: str) -> Response:
         api = f"http://{self.address}/sync/download/ovpn/{name}"
