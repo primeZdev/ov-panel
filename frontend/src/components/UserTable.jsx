@@ -1,7 +1,8 @@
 import { useTranslation } from 'react-i18next';
-import ActionsDropdown from './ActionsDropdown'; 
+import ActionsDropdown from './ActionsDropdown';
+import './UserTable.css';
 
-const UserTable = ({ users, onDelete, onDownload, onEdit }) => {
+const UserTable = ({ users, onDelete, onDownload, onEdit, onToggleStatus }) => {
   const { t } = useTranslation();
 
   return (
@@ -35,6 +36,11 @@ const UserTable = ({ users, onDelete, onDownload, onEdit }) => {
                     actions={[
                       { label: t('editButton'), onClick: () => onEdit(user) },
                       { label: t('downloadButton'), onClick: () => onDownload(user) },
+                      {
+                        label: user.is_active ? t('deactivateButton', 'Deactivate') : t('activateButton', 'Activate'),
+                        onClick: () => onToggleStatus(user),
+                        className: user.is_active ? 'warning-action' : 'success-action',
+                      },
                       {
                         label: t('deleteButton'),
                         onClick: () => onDelete(user.name),

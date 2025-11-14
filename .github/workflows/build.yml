@@ -1,10 +1,8 @@
 name: Build and Test OV-Panel
 
 on:
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+  release:
+    types: [published]
   workflow_dispatch:
 
 jobs:
@@ -21,8 +19,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install uv
-        run: |
-          pip install uv
+        run: pip install uv
 
       - name: Create .env file
         run: |

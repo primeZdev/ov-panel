@@ -4,7 +4,7 @@ from datetime import datetime
 
 from backend.logger import logger
 from backend.schema.output import Users as ShowUsers
-from backend.schema._input import CreateUser, UpdateUser, NodeCreate, SettingsUpdate
+from backend.schema._input import CreateUser, UpdateUser, NodeCreate
 from .models import User, Admin, Node, Settings
 
 
@@ -53,7 +53,7 @@ def update_user(db: Session, request: UpdateUser):
 def change_user_status(db: Session, name: str, status: bool) -> bool:
     try:
         user = db.query(User).filter(User.name == name).first()
-        user.is_active == status
+        user.is_active = status
         db.commit()
         db.refresh(user)
         return True
@@ -77,7 +77,6 @@ def delete_user(db: Session, name: str):
 
     db.delete(user)
     db.commit()
-    return {"detail": "User deleted successfully"}
 
 
 # admins crud
@@ -157,14 +156,4 @@ def get_settings(db: Session):
         db.commit()
         db.refresh(settings)
 
-    return settings
-
-
-def update_settings(db: Session, request: SettingsUpdate):
-    settings = db.query(Settings).first()
-
-    settings.port = request.port
-    settings.tunnel_address = request.tunnel_address
-    db.commit()
-    db.refresh(settings)
     return settings
