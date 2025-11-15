@@ -78,8 +78,7 @@ apt install -y python3 python3-pip python3-venv wget curl git -y
 curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
 apt install -y nodejs build-essential
 
-python3 -m pip install --upgrade pip
-pip3 install colorama pexpect requests uuid uv alembic --break-system-packages
+python3 -m pip install colorama pexpect requests uuid uv alembic --break-system-packages
 
 
 if [ ! -d "$INSTALL_DIR" ]; then
