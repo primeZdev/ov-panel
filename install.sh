@@ -13,8 +13,6 @@ CYAN="\033[0;36m"
 BLUE="\033[0;34m"
 NC="\033[0m"
 
-    curl -s ifconfig.me 2>/dev/null || echo "Unavailable"
-}
 
 show_welcome() {
     clear
@@ -27,7 +25,6 @@ show_welcome() {
     echo "╚═════╝ ╚═╝  ╚═╝  ╚═══╝  ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝╚══════╝╚══════╝"
     echo -e "${NC}"
     echo
-    echo -e "${GREEN}Server IP:${NC} $(get_server_ip)"
     echo -e "${GREEN}Telegram:${NC} @OVPanel"
     echo
 }
