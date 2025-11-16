@@ -422,15 +422,17 @@ Description=OV-Panel App
 After=network.target
 
 [Service]
-User=root
-WorkingDirectory=/opt/ov-panel/
-ExecStart=/usr/local/bin/uv run main.py
+WorkingDirectory=/opt/ov-panel
+ExecStart=/opt/ov-panel_venv/bin/uv run main.py
 Restart=always
 RestartSec=5
-Environment="PATH=/usr/local/bin:/usr/bin:/bin"
+User=root
+Environment="PATH=/opt/ov-panel_venv/bin"
+Environment="VIRTUAL_ENV=/opt/ov-panel_venv"
 
 [Install]
 WantedBy=multi-user.target
+
 """
 
     with open("/etc/systemd/system/ov-panel.service", "w") as f:
