@@ -3,6 +3,7 @@ set -e
 
 APP_NAME="ov-panel"
 INSTALL_DIR="/opt/$APP_NAME"
+VENV_DIR="/opt/${APP_NAME}_venv"
 REPO_URL="https://github.com/primeZdev/ov-panel"
 PYTHON="/usr/bin/python3"
 
@@ -10,76 +11,47 @@ GREEN="\033[0;32m"
 YELLOW="\033[1;33m"
 CYAN="\033[0;36m"
 BLUE="\033[0;34m"
-RED="\033[0;31m"
-BOLD="\033[1m"
 NC="\033[0m"
 
-get_server_ip() {
-    local ip=$(curl -s ifconfig.me 2>/dev/null || curl -s ipinfo.io/ip 2>/dev/null || echo "Unable to detect")
-    echo "$ip"
+    curl -s ifconfig.me 2>/dev/null || echo "Unavailable"
 }
 
-get_version() {
-    if [ -f "backend/version.py" ]; then
-        local version=$(grep -o '"[^"]*"' "backend/version.py" | head -1 | tr -d '"')
-        echo "v$version"
-    fi
-}
-
-show_welcome_banner() {
+show_welcome() {
     clear
-    echo -e "${CYAN}${BOLD}"
-    echo "  ██████╗ ██╗   ██╗██████╗  █████╗ ███╗   ██╗███████╗██╗     "
-    echo " ██╔═══██╗██║   ██║██╔══██╗██╔══██╗████╗  ██║██╔════╝██║     "
-    echo " ██║   ██║██║   ██║██████╔╝███████║██╔██╗ ██║█████╗  ██║     "
-    echo " ██║   ██║╚██╗ ██╔╝██╔═══╝ ██╔══██║██║╚██╗██║██╔══╝  ██║     "
-    echo " ╚██████╔╝ ╚████╔╝ ██║     ██║  ██║██║ ╚████║███████╗███████╗"
-    echo "  ╚═════╝   ╚═══╝  ╚═╝     ╚═╝  ╚═╝╚═╝  ╚═══╝╚══════╝╚══════╝"
+    echo -e "${CYAN}"
+    echo "██████╗  █████╗ ██╗   ██╗██████╗  █████╗ ███╗   ██╗███████╗██╗     "
+    echo "██╔══██╗██╔══██╗██║   ██║██╔══██╗██╔══██╗████╗  ██║██╔════╝██║     "
+    echo "██████╔╝███████║██║   ██║██████╔╝███████║██╔██╗ ██║█████╗  ██║     "
+    echo "██╔══██╗██╔══██║╚██╗ ██╔╝██╔══██╗██╔══██║██║╚██╗██║██╔══╝  ██║     "
+    echo "██████╔╝██║  ██║ ╚████╔╝ ██║  ██║██║  ██║██║ ╚████║███████╗███████╗"
+    echo "╚═════╝ ╚═╝  ╚═╝  ╚═══╝  ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝╚══════╝╚══════╝"
     echo -e "${NC}"
     echo
-    
-    local box_width=50
-    local title="OVPANEL Installation Setup"
-    local padding=$(( (box_width - ${#title}) / 2 ))
-    
-    echo -e "${YELLOW}${BOLD}"
-    printf "╔"
-    printf "═%.0s" $(seq 1 $box_width)
-    printf "╗\n"
-    
-    printf "║"
-    printf " %.0s" $(seq 1 $padding)
-    printf "%s" "$title"
-    printf " %.0s" $(seq 1 $(( box_width - padding - ${#title} )))
-    printf "║\n"
-    
-    printf "╚"
-    printf "═%.0s" $(seq 1 $box_width)
-    printf "╝\n"
-    echo -e "${NC}"
-    echo
-    
-    local server_ip=$(get_server_ip)
-    local version=$(get_version)
-    
-    echo -e "${GREEN}• ${BOLD}Version:${NC} ${BLUE}$version${NC}"
-    echo -e "${GREEN}• ${BOLD}Server IP:${NC} ${BLUE}$server_ip${NC}"
-    echo -e "${GREEN}• ${BOLD}Telegram Channel:${NC} ${BLUE}@OVPanel${NC}"
-    echo
-    echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${GREEN}Server IP:${NC} $(get_server_ip)"
+    echo -e "${GREEN}Telegram:${NC} @OVPanel"
     echo
 }
 
-show_welcome_banner
+show_welcome
 
+echo -e "${YELLOW}Updating system...${NC}"
 apt update -y
-apt install -y python3 python3-pip python3-venv wget curl git -y
+apt install -y python3 python3-full python3-venv python3-pip wget curl git
 
+# Node.js
+echo -e "${YELLOW}Installing NodeJS...${NC}"
 curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
 apt install -y nodejs build-essential
 
-python3 -m pip install colorama pexpect requests uuid uv alembic --break-system-packages
+python3 -m venv "$VENV_DIR"
 
+echo -e "${YELLOW}Activating venv...${NC}"
+source "$VENV_DIR/bin/activate"
+
+pip install --upgrade pip setuptools wheel
+
+echo -e "${YELLOW}Installing Python dependencies...${NC}"
+pip install colorama pexpect requests uuid uv alembic
 
 if [ ! -d "$INSTALL_DIR" ]; then
     echo -e "${YELLOW}Downloading latest release...${NC}"
@@ -92,14 +64,15 @@ if [ ! -d "$INSTALL_DIR" ]; then
     cd /tmp
 
     wget -O latest.tar.gz "$LATEST_URL"
-
     echo -e "${YELLOW}Extracting...${NC}"
     tar -xzf latest.tar.gz -C "$INSTALL_DIR" --strip-components=1
     rm -f latest.tar.gz
-
 else
     echo -e "${GREEN}Directory exists, skipping download.${NC}"
 fi
 
+echo -e "${YELLOW}Running installer...${NC}"
 cd "$INSTALL_DIR"
-$PYTHON installer.py
+$VENV_DIR/bin/python installer.py
+
+echo -e "${GREEN}✓ OVPANEL installation completed!${NC}"
