@@ -8,7 +8,6 @@ from backend.db.engine import get_db
 from backend.db import crud
 from backend.auth.auth import get_current_user
 from backend.node.task import (
-    create_user_on_all_nodes,
     delete_user_on_all_nodes,
     change_user_status_on_all_nodes,
 )

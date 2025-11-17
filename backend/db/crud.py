@@ -3,7 +3,6 @@ from fastapi import HTTPException
 from datetime import datetime
 
 from backend.logger import logger
-from backend.schema.output import Users as ShowUsers
 from backend.schema._input import CreateUser, UpdateUser, NodeCreate
 from .models import User, Admin, Node, Settings
 
@@ -21,13 +20,15 @@ def get_user_by_name(db: Session, name: str):
 
 
 def create_user(db: Session, request: CreateUser, owner: str):
-    if db.query(User).filter(User.name == request.name).first():
+    username = request.name.replace(" ", "_")
+
+    if db.query(User).filter(User.name == username).first():
         raise HTTPException(
             status_code=400, detail="user with this name already exists"
         )
 
     new_user = User(
-        name=request.name,
+        name=username,
         expiry_date=request.expiry_date,
         owner=owner,
     )
