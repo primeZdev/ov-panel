@@ -26,11 +26,21 @@ async def add_node_handler(request: NodeCreate, db: Session) -> bool:
         return False
 
 
-async def update_node_handler(address: str, request: NodeCreate, db: Session) -> None:
+async def update_node_handler(address: str, request: NodeCreate, db: Session) -> bool:
     """Update a node"""
     crud.update_node(db, address, request)
+    restart_node = NodeRequests(
+        address=request.address,
+        port=request.port,
+        api_key=request.key,
+        tunnel_address=request.tunnel_address,
+        protocol=request.protocol,
+        ovpn_port=request.ovpn_port,
+        set_new_setting=True,
+    ).check_node()
+
     logger.info(f"Node updated successfully: {address}")
-    return True
+    return restart_node
 
 
 async def delete_node_handler(address: str, db: Session) -> bool:

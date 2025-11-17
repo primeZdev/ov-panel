@@ -11,14 +11,14 @@ class NodeRequests:
         address: str,
         port: int,
         api_key: str,
-        tunnel_addres: str = "ovpanel.com",
+        tunnel_address: str = "ovpanel.com",
         protocol: str = "tcp",
         ovpn_port: int = 1194,
         set_new_setting: bool = False,
     ):
         self.address = f"{address}:{port}"
         self.headers = {"key": api_key}
-        self.tunnel_addres = tunnel_addres
+        self.tunnel_address = tunnel_address
         self.protocol = protocol
         self.ovpn_port = ovpn_port
         self.set_new_setting = set_new_setting
@@ -28,7 +28,7 @@ class NodeRequests:
         api = f"http://{self.address}/sync/get-status"
         try:
             data = {
-                "tunnel_address": self.tunnel_addres,
+                "tunnel_address": self.tunnel_address,
                 "protocol": self.protocol,
                 "ovpn_port": self.ovpn_port,
                 "set_new_setting": self.set_new_setting,
