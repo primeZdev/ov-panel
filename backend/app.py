@@ -38,11 +38,11 @@ api.add_middleware(
 
 
 def start_scheduler():
-    """This function starts the scheduler for daily tasks"""
+    """This function starts the scheduler for every 5 minutes tasks"""
     scheduler = AsyncIOScheduler()
     scheduler.add_job(
         check_user_expiry_date,
-        CronTrigger(hour=0, minute=0),
+        CronTrigger(minute="*/5"),
         id="check_user_expiry",
         replace_existing=True,
     )

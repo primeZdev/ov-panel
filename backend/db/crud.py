@@ -45,7 +45,12 @@ def update_user(db: Session, request: UpdateUser):
     if not user:
         raise HTTPException(status_code=404, detail="user not found on database")
 
+    if request.expiry_date >= datetime.today().date():
+        user.is_active = True
+    else:
+        user.is_active = False
     user.expiry_date = request.expiry_date
+
     db.commit()
     db.refresh(user)
     return {"detail": "User updated successfully"}
