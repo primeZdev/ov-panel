@@ -7,6 +7,7 @@ class User(Base):
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    uuid: Mapped[str] = mapped_column(unique=True, nullable=True)
     name: Mapped[str] = mapped_column(unique=True)
     expiry_date: Mapped[date]
     is_active: Mapped[bool] = mapped_column(default=True)
