@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
 from datetime import datetime
+from uuid import uuid4
 
 from backend.logger import logger
 from backend.schema._input import CreateUser, UpdateUser, NodeCreate
@@ -19,6 +20,13 @@ def get_user_by_name(db: Session, name: str):
     return None
 
 
+def get_user_by_uuid(db: Session, uuid: str):
+    user = db.query(User).filter(User.uuid == uuid).first()
+    if user:
+        return user
+    return None
+
+
 def create_user(db: Session, request: CreateUser, owner: str):
     username = request.name.replace(" ", "_")
 
@@ -28,9 +36,7 @@ def create_user(db: Session, request: CreateUser, owner: str):
         )
 
     new_user = User(
-        name=username,
-        expiry_date=request.expiry_date,
-        owner=owner,
+        name=username, expiry_date=request.expiry_date, owner=owner, uuid=str(uuid4())
     )
 
     db.add(new_user)
