@@ -33,7 +33,9 @@ class NodeRequests:
                 "ovpn_port": self.ovpn_port,
                 "set_new_setting": self.set_new_setting,
             }
-            response = requests.post(api, headers=self.headers, json=data).json()
+            response = requests.post(
+                api, headers=self.headers, json=data, timeout=5
+            ).json()
             if response.get("success"):
                 return True
             else:
@@ -46,7 +48,7 @@ class NodeRequests:
     def get_node_info(self) -> dict:
         api = f"http://{self.address}/sync/get-status"
         try:
-            response = requests.get(api, headers=self.headers).json()
+            response = requests.get(api, headers=self.headers, timeout=5).json()
             if response.get("success"):
                 return True, response.get("data")
             else:
@@ -62,7 +64,9 @@ class NodeRequests:
         api = f"http://{self.address}/sync/create-user"
         data = {"name": name}
         try:
-            response = requests.post(api, headers=self.headers, json=data).json()
+            response = requests.post(
+                api, headers=self.headers, json=data, timeout=25
+            ).json()
             if response.get("success"):
                 return True
             else:
@@ -78,7 +82,9 @@ class NodeRequests:
         api = f"http://{self.address}/sync/change-user-status"
         try:
             data = {"name": name, "status": "activate" if status else "deactivate"}
-            response = requests.post(api, headers=self.headers, json=data).json()
+            response = requests.post(
+                api, headers=self.headers, json=data, timeout=10
+            ).json()
 
             if response.get("success"):
                 return True
@@ -94,7 +100,7 @@ class NodeRequests:
     def download_ovpn_client(self, name: str) -> Response:
         api = f"http://{self.address}/sync/download/ovpn/{name}"
         try:
-            response = requests.get(api, headers=self.headers)
+            response = requests.get(api, headers=self.headers, timeout=25)
             if response.status_code == 200:
                 return Response(
                     content=response.content,
@@ -111,7 +117,9 @@ class NodeRequests:
         api = f"http://{self.address}/sync/delete-user"
         data = {"name": name}
         try:
-            response = requests.post(api, headers=self.headers, json=data).json()
+            response = requests.post(
+                api, headers=self.headers, json=data, timeout=25
+            ).json()
             if response.get("success"):
                 return True
             else:
