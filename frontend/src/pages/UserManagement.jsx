@@ -29,7 +29,7 @@ const UserManagement = () => {
     try {
       const response = await apiClient.get('/user/all');
       if (response.data.success && Array.isArray(response.data.data)) {
-        setUsers(response.data.data);
+        setUsers(response.data.data.slice().reverse());
       } else {
         setUsers([]);
       }
