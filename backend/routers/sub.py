@@ -35,9 +35,10 @@ async def get_subscription(
             continue
         if not status:
             continue
-        link = await download_ovpn_client_from_node(user.name, node.address, db)
-        if link:
-            ovpn_download_links[node.name] = link
+
+        ovpn_download_links[node.name] = (
+            f"{request.base_url}{config.SUBSCRIPTION_PATH}/download/{uuid}/{node.name}"
+        )
 
     return templates.TemplateResponse(
         "subscription.html",
@@ -49,3 +50,21 @@ async def get_subscription(
             "ovpn_download_links": ovpn_download_links,
         },
     )
+
+
+@router.get("/download/{uuid}/{node_name}")
+async def download_ovpn(
+    uuid: str,
+    node_name: str,
+    db: Session = Depends(get_db),
+):
+    user = crud.get_user_by_uuid(db, uuid)
+    if not user:
+        raise HTTPException(status_code=404)
+    node_obj = crud.get_node_by_name(db, node_name)
+    if not node_obj:
+        raise HTTPException(status_code=404)
+    response = await download_ovpn_client_from_node(user.name, node_obj.address, db)
+    if not response:
+        raise HTTPException(status_code=404, detail="File not found")
+    return response

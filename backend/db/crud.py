@@ -114,6 +114,10 @@ def get_node_by_address(db: Session, address: str):
     return db.query(Node).filter(Node.address == address).first()
 
 
+def get_node_by_name(db: Session, name: str):
+    return db.query(Node).filter(Node.name == name).first()
+
+
 def create_node(db: Session, request: NodeCreate):
     new_node = Node(
         name=request.name,
