@@ -35,10 +35,8 @@ class ServerInfo(BaseModel):
 
 
 class Settings(BaseModel):
-    subscription_url_prefix: Optional[str] = Field(
-        None, alias="SUBSCRIPTION_URL_PREFIX"
-    )
-    subscription_path: Optional[str] = Field("sub", alias="SUBSCRIPTION_PATH")
+    subscription_url_prefix: str
+    subscription_path: str
 
 
 class Admins(BaseModel):
