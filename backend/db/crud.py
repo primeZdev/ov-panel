@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
 from datetime import datetime
+from uuid import uuid4
 
 from backend.logger import logger
 from backend.schema._input import CreateUser, UpdateUser, NodeCreate
@@ -19,6 +20,13 @@ def get_user_by_name(db: Session, name: str):
     return None
 
 
+def get_user_by_uuid(db: Session, uuid: str):
+    user = db.query(User).filter(User.uuid == uuid).first()
+    if user:
+        return user
+    return None
+
+
 def create_user(db: Session, request: CreateUser, owner: str):
     username = request.name.replace(" ", "_")
 
@@ -28,9 +36,7 @@ def create_user(db: Session, request: CreateUser, owner: str):
         )
 
     new_user = User(
-        name=username,
-        expiry_date=request.expiry_date,
-        owner=owner,
+        name=username, expiry_date=request.expiry_date, owner=owner, uuid=str(uuid4())
     )
 
     db.add(new_user)
@@ -45,7 +51,12 @@ def update_user(db: Session, request: UpdateUser):
     if not user:
         raise HTTPException(status_code=404, detail="user not found on database")
 
+    if request.expiry_date >= datetime.today().date():
+        user.is_active = True
+    else:
+        user.is_active = False
     user.expiry_date = request.expiry_date
+
     db.commit()
     db.refresh(user)
     return {"detail": "User updated successfully"}
@@ -101,6 +112,10 @@ def get_all_nodes(db: Session):
 
 def get_node_by_address(db: Session, address: str):
     return db.query(Node).filter(Node.address == address).first()
+
+
+def get_node_by_name(db: Session, name: str):
+    return db.query(Node).filter(Node.name == name).first()
 
 
 def create_node(db: Session, request: NodeCreate):

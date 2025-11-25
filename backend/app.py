@@ -10,6 +10,7 @@ from fastapi.responses import FileResponse
 from backend.operations.daily_checks import check_user_expiry_date
 from backend.config import config
 from backend.routers import all_routers
+from backend.routers.sub import router as subscription_router
 from backend.version import __version__
 
 
@@ -38,11 +39,11 @@ api.add_middleware(
 
 
 def start_scheduler():
-    """This function starts the scheduler for daily tasks"""
+    """This function starts the scheduler for every 5 minutes tasks"""
     scheduler = AsyncIOScheduler()
     scheduler.add_job(
         check_user_expiry_date,
-        CronTrigger(hour=0, minute=0),
+        CronTrigger(minute="*/5"),
         id="check_user_expiry",
         replace_existing=True,
     )
@@ -57,6 +58,7 @@ async def startup_event():
 
 for router in all_routers:
     api.include_router(prefix="/api", router=router)
+    api.include_router(subscription_router)
 
 
 @api.get(f"/{config.URLPATH}/{{path:path}}")

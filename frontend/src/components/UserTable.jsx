@@ -1,9 +1,19 @@
 import { useTranslation } from 'react-i18next';
+import { FiCopy } from 'react-icons/fi';
 import ActionsDropdown from './ActionsDropdown';
 import './UserTable.css';
 
-const UserTable = ({ users, onDelete, onDownload, onEdit, onToggleStatus }) => {
+const UserTable = ({ users, onDelete, onDownload, onEdit, onToggleStatus, getSubscriptionLink }) => {
   const { t } = useTranslation();
+
+  const handleCopyLink = (user) => {
+    if (!getSubscriptionLink) return;
+    const link = getSubscriptionLink(user);
+    if (link) {
+      navigator.clipboard.writeText(link);
+      window.alert(t('copied_subscription_link', 'Subscription link copied!'));
+    }
+  };
 
   return (
     <div className="table-container">
@@ -31,7 +41,7 @@ const UserTable = ({ users, onDelete, onDownload, onEdit, onToggleStatus }) => {
                   </span>
                 </td>
                 <td>{user.owner}</td>
-                <td style={{ textAlign: 'right' }}>
+                <td style={{ textAlign: 'right', display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <ActionsDropdown
                     actions={[
                       { label: t('editButton'), onClick: () => onEdit(user) },
@@ -48,6 +58,14 @@ const UserTable = ({ users, onDelete, onDownload, onEdit, onToggleStatus }) => {
                       },
                     ]}
                   />
+                  <button
+                    className="icon-btn btn-copy"
+                    title={t('copySubscriptionLink', 'Copy Link')}
+                    onClick={() => handleCopyLink(user)}
+                    style={{ background: 'none', border: 'none', padding: 0, marginLeft: 6, cursor: 'pointer' }}
+                  >
+                    <FiCopy style={{ fontSize: 20, color: '#90caf9' }} />
+                  </button>
                 </td>
               </tr>
             ))

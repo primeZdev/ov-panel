@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="fa">
+
+<head>
+    <meta charset="UTF-8">
+    <title>{{ name }}'s Subscription Info</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        :root {
+            --primary-bg: #f7f7f7;
+            --primary-text: #222;
+            --card-bg: #fff;
+            --accent: #1976d2;
+            --active: #43a047;
+            --inactive: #e53935;
+            --border-radius: 16px;
+            --shadow: 0 4px 24px #0001;
+        }
+
+        [data-theme="dark"] {
+            --primary-bg: #181a1b;
+            --primary-text: #eee;
+            --card-bg: #23272a;
+            --shadow: 0 4px 24px #0006;
+        }
+
+        body {
+            font-family: Vazir, Arial, sans-serif;
+            background: var(--primary-bg);
+            color: var(--primary-text);
+            transition: background 0.3s, color 0.3s;
+        }
+
+        .container {
+            max-width: 480px;
+            margin: 48px auto;
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            padding: 40px 32px 32px 32px;
+            position: relative;
+        }
+
+        h2 {
+            color: var(--primary-text);
+            margin-bottom: 28px;
+            font-size: 1.7em;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        .info {
+            margin-bottom: 28px;
+            font-size: 1.13em;
+            background: rgba(25, 118, 210, 0.04);
+            border-radius: 10px;
+            padding: 18px 16px;
+        }
+
+        .info strong {
+            min-width: 110px;
+            display: inline-block;
+        }
+
+        .links {
+            margin-top: 18px;
+        }
+
+        .links a {
+            display: block;
+            margin: 10px 0;
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 600;
+            padding: 10px 18px;
+            border-radius: 8px;
+            background: rgba(25, 118, 210, 0.07);
+            transition: background 0.2s, color 0.2s;
+        }
+
+        .links a:hover {
+            background: var(--accent);
+            color: #fff;
+        }
+
+        .active {
+            color: var(--active);
+            font-weight: bold;
+        }
+
+        .inactive {
+            color: var(--inactive);
+            font-weight: bold;
+        }
+
+        .lang-switch,
+        .theme-switch {
+            display: inline-block;
+            margin: 0 8px 16px 0;
+            cursor: pointer;
+            padding: 7px 18px;
+            border-radius: 8px;
+            background: var(--card-bg);
+            color: var(--primary-text);
+            border: 1px solid #bbb;
+            font-size: 1em;
+            font-weight: 500;
+            transition: background 0.3s, color 0.3s, border 0.3s;
+        }
+
+        .lang-switch.active,
+        .theme-switch.active {
+            background: var(--accent);
+            color: #fff;
+            border-color: var(--accent);
+        }
+
+        .switch-bar {
+            text-align: left;
+            margin-bottom: 18px;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                max-width: 98vw;
+                padding: 18px 6vw;
+            }
+
+            h2 {
+                font-size: 1.2em;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container" id="main-container">
+        <div class="switch-bar">
+            <button class="lang-switch" id="fa-btn">فارسی</button>
+            <button class="lang-switch" id="en-btn">English</button>
+            <button class="theme-switch" id="theme-btn">🌙/☀️</button>
+        </div>
+        <h2 id="title">اطلاعات اشتراک شما</h2>
+        <div class="info">
+            <strong id="username-label">نام کاربری:</strong> <span id="username">{{ name }}</span><br>
+            <strong id="expiry-label">تاریخ انقضا:</strong> <span id="expiry">{{ expiry_date }}</span><br>
+            <strong id="status-label">وضعیت:</strong>
+            <span id="status">
+                {% if is_active %}
+                <span class="active">فعال</span>
+                {% else %}
+                <span class="inactive">غیرفعال</span>
+                {% endif %}
+            </span>
+        </div>
+        <div class="links">
+            <strong id="links-label">دانلود کانفیگ ها:</strong>
+            <div id="links-list">
+                {% if ovpn_download_links %}
+                {% for node, link in ovpn_download_links.items() %}
+                <a href="{{ link }}" download>{{ node }}</a>
+                {% endfor %}
+                {% else %}
+                <span id="no-links">هیچ لینکی موجود نیست.</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <script>
+        // Language strings
+        const fa = {
+            title: "اطلاعات اشتراک شما",
+            username: "نام کاربری:",
+            expiry: "تاریخ انقضا:",
+            status: "وضعیت:",
+            active: "فعال",
+            inactive: "غیرفعال",
+            links: "دانلود کانفیگ OVPN برای نودها:",
+            noLinks: "هیچ نودی فعال نیست یا لینک موجود نیست."
+        };
+        const en = {
+            title: "Your Subscription Info",
+            username: "Username:",
+            expiry: "Expiry Date:",
+            status: "Status:",
+            active: "Active",
+            inactive: "Inactive",
+            links: "Download OVPN Config for Nodes:",
+            noLinks: "No active node or link available."
+        };
+
+        function setLang(lang) {
+            const dict = lang === 'fa' ? fa : en;
+            document.getElementById('title').textContent = dict.title;
+            document.getElementById('username-label').textContent = dict.username;
+            document.getElementById('expiry-label').textContent = dict.expiry;
+            document.getElementById('status-label').textContent = dict.status;
+            document.getElementById('links-label').textContent = dict.links;
+            const statusSpan = document.getElementById('status').querySelector('span');
+            if (statusSpan) {
+                statusSpan.textContent = statusSpan.classList.contains('active') ? dict.active : dict.inactive;
+            }
+            const noLinks = document.getElementById('no-links');
+            if (noLinks) noLinks.textContent = dict.noLinks;
+            document.body.dir = lang === 'fa' ? 'rtl' : 'ltr';
+            document.getElementById('fa-btn').classList.toggle('active', lang === 'fa');
+            document.getElementById('en-btn').classList.toggle('active', lang === 'en');
+            localStorage.setItem('subscription_lang', lang);
+        }
+        document.getElementById('fa-btn').onclick = () => setLang('fa');
+        document.getElementById('en-btn').onclick = () => setLang('en');
+        function setTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            document.getElementById('theme-btn').classList.toggle('active', theme === 'dark');
+            document.getElementById('theme-btn').textContent = theme === 'dark' ? '☀️' : '🌙';
+            localStorage.setItem('subscription_theme', theme);
+        }
+        document.getElementById('theme-btn').onclick = () => {
+            const current = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            setTheme(current);
+        };
+        // Load preferences from localStorage
+        const savedLang = localStorage.getItem('subscription_lang') || 'fa';
+        const savedTheme = localStorage.getItem('subscription_theme') || 'light';
+        setLang(savedLang);
+        setTheme(savedTheme);
+    </script>
+</body>
+
+</html>
