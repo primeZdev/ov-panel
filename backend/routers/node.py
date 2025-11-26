@@ -72,16 +72,16 @@ async def list_nodes(
 
 
 @router.get(
-    "/ovpn/{node_id}/{name}",
+    "/ovpn/{uuid}/{node_id}",
     description="Download OVPN client configuration from a node",
 )
 async def download_ovpn_client(
     node_id: int,
-    name: str,
+    uuid: str,
     db: Session = Depends(get_db),
     user: dict = Depends(get_current_user),
 ):
-    response = await download_ovpn_client_from_node(db=db, node_id=node_id, name=name)
+    response = await download_ovpn_client_from_node(db=db, uuid=uuid, node_id=node_id)
     if response:
         return response
     else:

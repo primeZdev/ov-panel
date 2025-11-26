@@ -14,7 +14,7 @@ const SelectNodeForDownloadModal = ({ user, onClose }) => {
   useEffect(() => {
     const fetchNodes = async () => {
       try {
-        const response = await apiClient.get('/node/list');
+        const response = await apiClient.get('/nodes/');
         if (response.data.success && response.data.data) {
           const available = response.data.data.filter(node => node.status);
           setNodes(available);
@@ -41,7 +41,7 @@ const SelectNodeForDownloadModal = ({ user, onClose }) => {
       if (!selectedNodeAddress) throw new Error('No node selected for download.');
       const selectedNode = nodes.find(n => n.address === selectedNodeAddress);
       if (!selectedNode) throw new Error('Selected node not found.');
-      downloadUrl = `/node/download/ovpn/${selectedNodeAddress}/${user.name}`;
+      downloadUrl = `/nodes/ovpn/${user.uuid}/${selectedNode.id}/`;
       downloadFileName = `${user.name}-${selectedNode.name}.ovpn`;
 
       const response = await apiClient.get(downloadUrl, { responseType: 'arraybuffer' });

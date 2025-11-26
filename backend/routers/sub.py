@@ -64,7 +64,7 @@ async def download_ovpn(
     node_obj = crud.get_node_by_name(db, node_name)
     if not node_obj:
         raise HTTPException(status_code=404)
-    response = await download_ovpn_client_from_node(user.name, node_obj.address, db)
+    response = await download_ovpn_client_from_node(user.uuid, node_obj.id, db)
     if not response:
         raise HTTPException(status_code=404, detail="File not found")
     return response

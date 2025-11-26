@@ -135,16 +135,19 @@ async def change_user_status_on_all_nodes(
 
 
 async def download_ovpn_client_from_node(
-    name: str, node_id: int, db: Session
+    uuid: str, node_id: int, db: Session
 ) -> Response | None:
     """Download OVPN client from a node"""
     node = crud.get_node_by_id(db, node_id)
+    user = crud.get_user_by_uuid(db, uuid)
+    if not node or not user:
+        return None
     result = NodeRequests(
         address=node.address, port=node.port, api_key=node.key
-    ).download_ovpn_client(f"{name}-{node.name}")
+    ).download_ovpn_client(f"{user.name}-{node.name}")
     if result:
         logger.info(
-            f"OVPN client downloaded for user '{name}-{node.name}' on node {node.address}:{node.port}"
+            f"OVPN client downloaded for user '{user.name}-{node.name}' on node {node.address}:{node.port}"
         )
         return result
     return None
