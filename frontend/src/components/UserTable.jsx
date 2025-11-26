@@ -8,12 +8,43 @@ const UserTable = ({ users, onDelete, onDownload, onEdit, onToggleStatus, getSub
 
   const handleCopyLink = (user) => {
     if (!getSubscriptionLink) return;
-    const link = getSubscriptionLink(user);
-    if (link) {
-      navigator.clipboard.writeText(link);
-      window.alert(t('copied_subscription_link', 'Subscription link copied!'));
+    const link = getSubscriptionLink(user) || '';
+
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(link).then(() => {
+        window.alert(t('copied_subscription_link', 'Subscription link copied!'));
+      }).catch(() => {
+        fallbackCopyTextToClipboard(link);
+      });
+    } else {
+      fallbackCopyTextToClipboard(link);
     }
   };
+
+  // Fallback for insecure context (http)
+  function fallbackCopyTextToClipboard(text) {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.style.position = 'fixed';
+    textArea.style.top = 0;
+    textArea.style.left = 0;
+    textArea.style.width = '2em';
+    textArea.style.height = '2em';
+    textArea.style.padding = 0;
+    textArea.style.border = 'none';
+    textArea.style.outline = 'none';
+    textArea.style.boxShadow = 'none';
+    textArea.style.background = 'transparent';
+    document.body.appendChild(textArea);
+    textArea.select();
+    try {
+      document.execCommand('copy');
+      window.alert(t('copied_subscription_link', 'Subscription link copied!'));
+    } catch (err) {
+      window.alert(t('copy_failed', 'Failed to copy link.'));
+    }
+    document.body.removeChild(textArea);
+  }
 
   return (
     <div className="table-container">
