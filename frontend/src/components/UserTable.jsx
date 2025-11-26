@@ -84,7 +84,7 @@ const UserTable = ({ users, onDelete, onDownload, onEdit, onToggleStatus, getSub
                       },
                       {
                         label: t('deleteButton'),
-                        onClick: () => onDelete(user.name),
+                        onClick: () => onDelete(user.uuid, user.name),
                         className: 'danger-action',
                       },
                     ]}

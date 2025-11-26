@@ -8,10 +8,10 @@ from backend.operations.server_info import get_server_info
 from backend.schema.output import Settings, ServerInfo, ResponseModel
 from backend.config import config
 
-router = APIRouter(prefix="/settings", tags=["Panel Settings"])
+router = APIRouter(prefix="/server", tags=["Panel Settings"])
 
 
-@router.get("/", response_model=ResponseModel)
+@router.get("/settings", response_model=ResponseModel)
 async def get_settings(
     request: Request,
     db: Session = Depends(get_db),
@@ -33,7 +33,7 @@ async def get_settings(
 
 
 @router.get(
-    "/server/info",
+    "/info",
     response_model=ResponseModel,
     description="Get server information (cpu, memory, ...)",
 )

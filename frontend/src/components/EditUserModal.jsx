@@ -22,14 +22,14 @@ const EditUserModal = ({ user, onClose, onUserUpdated }) => {
     setError('');
     setIsLoading(true);
 
-    
+
     const payload = {
-      name: user.name, 
+      name: user.name,
       expiry_date: expiryDate,
     };
-    
+
     try {
-      const response = await apiClient.put('/user/update', payload);
+      const response = await apiClient.put(`/users/${user.uuid}/`, payload);
       if (response.data.success) {
         alert('User updated successfully.');
         onUserUpdated();
@@ -59,7 +59,7 @@ const EditUserModal = ({ user, onClose, onUserUpdated }) => {
               type="text"
               id="edit-user-name"
               value={user.name}
-              disabled 
+              disabled
             />
           </div>
           <div className="input-group">

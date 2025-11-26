@@ -5,7 +5,7 @@ import AddNodeModal from '../components/AddNodeModal';
 import EditNodeModal from '../components/EditNodeModal';
 import NodeTable from '../components/NodeTable';
 import UserStatCard from '../components/UserStatCard';
-import Pagination from '../components/Pagination'; 
+import Pagination from '../components/Pagination';
 import { useTranslation } from 'react-i18next';
 
 const ITEMS_PER_PAGE = 10;
@@ -17,15 +17,15 @@ const NodeManagement = () => {
   const [selectedNode, setSelectedNode] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const { t } = useTranslation();
-  
-  
+
+
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
 
   const fetchNodes = useCallback(async () => {
     setIsLoading(true);
     try {
-      const response = await apiClient.get('/node/list');
+      const response = await apiClient.get('/nodes/');
       if (response.data.success) {
         setNodes(response.data.data || []);
       }
@@ -49,7 +49,7 @@ const NodeManagement = () => {
     };
   }, [nodes]);
 
-  
+
   const filteredNodes = useMemo(() => {
     return nodes.filter(node =>
       node.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -65,16 +65,16 @@ const NodeManagement = () => {
 
   const handleSearchChange = (event) => {
     setSearchTerm(event.target.value);
-    setCurrentPage(1); 
+    setCurrentPage(1);
   };
 
 
-  const handleDelete = async (nodeAddress, nodeName) => {
+  const handleDelete = async (nodeId, nodeName) => {
     if (!window.confirm(`${t('deleteNodeConfirm')} ${nodeName}?`)) {
       return;
     }
     try {
-      const response = await apiClient.delete(`/node/delete/${nodeAddress}`);
+      const response = await apiClient.delete(`/nodes/${nodeId}`);
       if (response.data.success) {
         alert('Node deleted successfully.');
         fetchNodes();
@@ -86,13 +86,13 @@ const NodeManagement = () => {
     }
   };
 
-  const handleCheckStatus = async (nodeAddress) => {
+  const handleCheckStatus = async (nodeId) => {
     try {
-        const response = await apiClient.get(`/node/status/${nodeAddress}`);
-        alert(response.data.msg || 'Status check complete.');
-        fetchNodes();
+      const response = await apiClient.get(`/nodes/${nodeId}/status/`);
+      alert(response.data.msg || 'Status check complete.');
+      fetchNodes();
     } catch (error) {
-        alert('Failed to check node status.');
+      alert('Failed to check node status.');
     }
   };
 
@@ -100,7 +100,7 @@ const NodeManagement = () => {
     setIsAddModalOpen(false);
     fetchNodes();
   };
-  
+
   const handleOpenEditModal = (node) => {
     setSelectedNode(node);
     setIsEditModalOpen(true);
@@ -163,9 +163,9 @@ const NodeManagement = () => {
         />
       </div>
 
-      <NodeTable 
-        nodes={paginatedNodes} 
-        isLoading={isLoading} 
+      <NodeTable
+        nodes={paginatedNodes}
+        isLoading={isLoading}
         onDelete={handleDelete}
         onCheckStatus={handleCheckStatus}
         onEdit={handleOpenEditModal}
@@ -177,7 +177,7 @@ const NodeManagement = () => {
           onNodeCreated={handleNodeCreated}
         />
       )}
-      
+
       {isEditModalOpen && (
         <EditNodeModal
           node={selectedNode}
@@ -185,7 +185,7 @@ const NodeManagement = () => {
           onNodeUpdated={handleNodeUpdated}
         />
       )}
-      
+
     </div>
   );
 };

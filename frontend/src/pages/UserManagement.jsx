@@ -27,7 +27,7 @@ const UserManagement = () => {
 
   const fetchUsers = async () => {
     try {
-      const response = await apiClient.get('/user/all');
+      const response = await apiClient.get('/users/');
       if (response.data.success && Array.isArray(response.data.data)) {
         setUsers(response.data.data.slice().reverse());
       } else {
@@ -41,7 +41,7 @@ const UserManagement = () => {
 
   const fetchSubscriptionSettings = async () => {
     try {
-      const response = await apiClient.get('/settings/');
+      const response = await apiClient.get('/server/settings/');
       if (response.data.success && response.data.data) {
         setSubscriptionSettings(response.data.data);
       }
@@ -84,11 +84,11 @@ const UserManagement = () => {
     setCurrentPage(1);
   };
 
-  const handleDelete = async (username) => {
-    if (!window.confirm(`Are you sure you want to delete user ${username}?`)) return;
+  const handleDelete = async (uuid, name) => {
+    if (!window.confirm(`Are you sure you want to delete user ${name}?`)) return;
     try {
-      await apiClient.delete(`/user/delete/${username}`);
-      alert('User deleted successfully.');
+      await apiClient.delete(`/users/${uuid}`);
+      alert(`User ${name} deleted successfully.`);
       fetchUsers();
     } catch (error) {
       alert('Error deleting user.');
@@ -101,7 +101,7 @@ const UserManagement = () => {
     if (!window.confirm(`Are you sure you want to ${statusLabel} user ${user.name}?`)) return;
 
     try {
-      const response = await apiClient.put(`/user/change-status`, {
+      const response = await apiClient.put(`/users/${user.uuid}/status`, {
         name: user.name,
         status: !user.is_active,
         expiry_date: null

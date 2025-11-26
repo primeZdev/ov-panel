@@ -15,7 +15,7 @@ const AddUserModal = ({ onClose, onUserAdded }) => {
     setError('');
     setIsLoading(true);
     try {
-      const response = await apiClient.post('/user/create', { name: name, expiry_date: expiryDate });
+      const response = await apiClient.post('/users/', { name: name, expiry_date: expiryDate });
       if (response.data.success) {
         alert('User created successfully.');
         onUserAdded();

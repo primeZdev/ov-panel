@@ -13,10 +13,10 @@ from backend.node.task import (
     change_user_status_on_all_nodes,
 )
 
-router = APIRouter(prefix="/user", tags=["Users"])
+router = APIRouter(prefix="/users", tags=["Users"])
 
 
-@router.get("/all", response_model=ResponseModel)
+@router.get("/", response_model=ResponseModel)
 async def get_all_users(
     db: Session = Depends(get_db), user: dict = Depends(get_current_user)
 ):
@@ -29,7 +29,7 @@ async def get_all_users(
     )
 
 
-@router.post("/create", response_model=ResponseModel)
+@router.post("/", response_model=ResponseModel)
 async def create_user(
     request: CreateUser,
     db: Session = Depends(get_db),
@@ -47,32 +47,38 @@ async def create_user(
     )
 
 
-@router.put("/update")
+@router.put("/{uuid}", response_model=ResponseModel)
 async def update_user(
+    uuid: str,
     request: UpdateUser,
     db: Session = Depends(get_db),
     user: dict = Depends(get_current_user),
 ):
-    result = crud.update_user(db, request)
+    result = crud.update_user(db, uuid, request)
     check_user_expiry_date()
     return ResponseModel(success=True, msg="User updated successfully", data=result)
 
 
-@router.put("/change-status", response_model=ResponseModel)
+@router.put("/{uuid}/status", response_model=ResponseModel)
 async def change_user_status(
+    uuid: str,
     request: UpdateUser,
     db: Session = Depends(get_db),
     user: dict = Depends(get_current_user),
 ):
-    await change_user_status_on_all_nodes(request.name, request.status, db)
+    await change_user_status_on_all_nodes(uuid, request.name, request.status, db)
     return ResponseModel(success=True, msg="Changed user status successfully")
 
 
-@router.delete("/delete/{name}")
+@router.delete("/{uuid}", response_model=ResponseModel)
 async def delete_user(
-    name: str, db: Session = Depends(get_db), user: dict = Depends(get_current_user)
+    uuid: str, db: Session = Depends(get_db), user: dict = Depends(get_current_user)
 ):
-    if await delete_user_on_all_nodes(name, db):
-        crud.delete_user(db, name)
+    user = crud.get_user_by_uuid(db, uuid)
+    if user is None:
+        return ResponseModel(success=False, msg="User not found", data=None)
+
+    if await delete_user_on_all_nodes(user.name, db):
+        crud.delete_user(db, user.name)
         return ResponseModel(success=True, msg="User deleted successfully")
     return ResponseModel(success=False, msg="Failed to delete user on all nodes")
