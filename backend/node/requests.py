@@ -48,9 +48,17 @@ class NodeRequests:
     def get_node_info(self) -> dict:
         api = f"http://{self.address}/sync/get-status"
         try:
-            response = requests.get(api, headers=self.headers, timeout=5).json()
+            data = {
+                "tunnel_address": self.tunnel_address,
+                "protocol": self.protocol,
+                "ovpn_port": self.ovpn_port,
+                "set_new_setting": self.set_new_setting,
+            }
+            response = requests.post(
+                api, headers=self.headers, json=data, timeout=10
+            ).json()
             if response.get("success"):
-                return True, response.get("data")
+                return response.get("data")
             else:
                 logger.error(
                     f"Failed to get node info on {self.address}: {response.get('msg')}"
