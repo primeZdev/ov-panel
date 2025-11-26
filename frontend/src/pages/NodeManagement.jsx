@@ -12,6 +12,7 @@ const ITEMS_PER_PAGE = 10;
 
 const NodeManagement = () => {
   const [nodes, setNodes] = useState([]);
+  const [nodeInfo, setNodeInfo] = useState({});
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedNode, setSelectedNode] = useState(null);
@@ -39,6 +40,27 @@ const NodeManagement = () => {
   useEffect(() => {
     fetchNodes();
   }, [fetchNodes]);
+
+
+  useEffect(() => {
+    let intervalId;
+    const fetchAllNodeStatus = async () => {
+      if (!nodes || nodes.length === 0) return;
+      const info = {};
+      await Promise.all(nodes.map(async (node) => {
+        try {
+          const res = await apiClient.get(`/nodes/${node.id}/status/`);
+          if (res.data.success && res.data.data && res.data.data.node_info) {
+            info[node.id] = res.data.data.node_info;
+          }
+        } catch (e) { }
+      }));
+      setNodeInfo(info);
+    };
+    fetchAllNodeStatus();
+    intervalId = setInterval(fetchAllNodeStatus, 10000);
+    return () => clearInterval(intervalId);
+  }, [nodes]);
 
   const nodeStats = useMemo(() => {
     const activeCount = nodes.filter((node) => node.status).length;
@@ -166,6 +188,7 @@ const NodeManagement = () => {
       <NodeTable
         nodes={paginatedNodes}
         isLoading={isLoading}
+        nodeInfo={nodeInfo}
         onDelete={handleDelete}
         onCheckStatus={handleCheckStatus}
         onEdit={handleOpenEditModal}
