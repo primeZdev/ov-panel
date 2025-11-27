@@ -3,7 +3,6 @@ set -e
 
 APP_NAME="ov-panel"
 INSTALL_DIR="/opt/$APP_NAME"
-VENV_DIR="/opt/${APP_NAME}_venv"
 REPO_URL="https://github.com/primeZdev/ov-panel"
 PYTHON="/usr/bin/python3"
 
@@ -13,42 +12,21 @@ CYAN="\033[0;36m"
 BLUE="\033[0;34m"
 NC="\033[0m"
 
-
-show_welcome() {
-    clear
-    echo -e "${CYAN}"
-    echo "██████╗  █████╗ ██╗   ██╗██████╗  █████╗ ███╗   ██╗███████╗██╗     "
-    echo "██╔══██╗██╔══██╗██║   ██║██╔══██╗██╔══██╗████╗  ██║██╔════╝██║     "
-    echo "██████╔╝███████║██║   ██║██████╔╝███████║██╔██╗ ██║█████╗  ██║     "
-    echo "██╔══██╗██╔══██║╚██╗ ██╔╝██╔══██╗██╔══██║██║╚██╗██║██╔══╝  ██║     "
-    echo "██████╔╝██║  ██║ ╚████╔╝ ██║  ██║██║  ██║██║ ╚████║███████╗███████╗"
-    echo "╚═════╝ ╚═╝  ╚═╝  ╚═══╝  ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝╚══════╝╚══════╝"
-    echo -e "${NC}"
-    echo
-    echo -e "${GREEN}Telegram:${NC} @OVPanel"
-    echo
-}
-
-show_welcome
-
 echo -e "${YELLOW}Updating system...${NC}"
 apt update -y
-apt install -y python3 python3-full python3-venv python3-pip wget curl git
+apt install -y python3 python3-full python3-venv wget curl git
 
-# Node.js
-echo -e "${YELLOW}Installing NodeJS...${NC}"
-curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
-apt install -y nodejs build-essential
+echo -e "${YELLOW}Installing uv...${NC}"
+wget -qO- https://astral.sh/uv/uv/install.sh | sh
 
-python3 -m venv "$VENV_DIR"
+export PATH="$HOME/.local/bin:$PATH"
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
 
-echo -e "${YELLOW}Activating venv...${NC}"
-source "$VENV_DIR/bin/activate"
-
-pip install --upgrade pip setuptools wheel
-
-echo -e "${YELLOW}Installing Python dependencies...${NC}"
-pip install colorama pexpect requests uuid uv alembic
+if ! command -v uv &> /dev/null; then
+    echo -e "${YELLOW}uv not found in PATH, trying alternative installation...${NC}"
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+    export PATH="$HOME/.local/bin:$PATH"
+fi
 
 if [ ! -d "$INSTALL_DIR" ]; then
     echo -e "${YELLOW}Downloading latest release...${NC}"
@@ -68,8 +46,16 @@ else
     echo -e "${GREEN}Directory exists, skipping download.${NC}"
 fi
 
-echo -e "${YELLOW}Running installer...${NC}"
 cd "$INSTALL_DIR"
-$VENV_DIR/bin/python installer.py
 
-echo -e "${GREEN}✓ OVPANEL installation completed!${NC}"
+echo -e "${YELLOW}Installing dependencies...${NC}"
+uv sync
+
+# Node.js
+echo -e "${YELLOW}Installing NodeJS...${NC}"
+curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+apt install -y nodejs build-essential
+
+echo -e "${YELLOW}Installing Python dependencies...${NC}"
+
+uv run python installer.py
