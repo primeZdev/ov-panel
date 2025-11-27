@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Subscription Info</title>
+    <title>{{ name }} - Sub info</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <!-- Fonts: Arad (Persian), Plus Jakarta Sans (English/Latin), Noto Sans SC (Chinese) -->
@@ -82,6 +82,10 @@
             justify-content: center;
             padding: 20px;
             transition: background-color 0.3s ease, color 0.3s ease;
+            background-image:
+                linear-gradient(to right, rgba(100, 116, 139, 0.07) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(100, 116, 139, 0.07) 1px, transparent 1px);
+            background-size: 32px 32px;
         }
 
         /* Main Card */
@@ -550,6 +554,20 @@
             </div>
         </div>
 
+        <!-- OpenVPN App Download Section -->
+        <div class="app-download-section" style="margin: 32px 24px 0 24px;">
+            <div id="app-download-label"
+                style="color: var(--text-secondary); font-size: 0.8rem; font-weight: 700; letter-spacing: 0.05em; margin-bottom: 16px;">
+                دانلود اپلیکیشن OpenVPN
+            </div>
+            <div class="app-download-btns" style="display: flex; flex-direction: column; gap: 12px;">
+                <a id="btn-client" class="app-btn" href="https://openvpn.net/client/" target="_blank" rel="noopener"
+                    style="background: var(--surface-color); border: 1px solid var(--border-color); padding: 14px 20px; border-radius: var(--radius-sm); text-decoration: none; color: var(--primary-color); font-weight: 600; text-align: center; transition: var(--transition);">
+                    دانلود کلاینت OpenVPN
+                </a>
+            </div>
+        </div>
+
         <!-- Downloads -->
         <div class="links-section">
             <strong id="links-label">دانلود کانفیگ ها</strong>
@@ -662,6 +680,8 @@
                     inactive: "غیرفعال",
                     links: "دانلود کانفیگ ها",
                     noLinks: "هیچ لینکی موجود نیست",
+                    appDownload: "دانلود اپلیکیشن OpenVPN",
+                    client: "دانلود کلاینت OpenVPN",
                     dir: "rtl",
                     themeLight: "روشن", themeDark: "تاریک", themeSystem: "سیستم"
                 },
@@ -673,6 +693,8 @@
                     inactive: "Inactive",
                     links: "Download Configs",
                     noLinks: "No links available",
+                    appDownload: "Download OpenVPN App",
+                    client: "Download OpenVPN Client",
                     dir: "ltr",
                     themeLight: "Light", themeDark: "Dark", themeSystem: "System"
                 },
@@ -684,6 +706,8 @@
                     inactive: "Неактивен",
                     links: "Скачать конфигурации",
                     noLinks: "Нет доступных ссылок",
+                    appDownload: "Скачать OpenVPN приложение",
+                    client: "Скачать OpenVPN клиент",
                     dir: "ltr",
                     themeLight: "Светлая", themeDark: "Темная", themeSystem: "Системная"
                 },
@@ -695,6 +719,8 @@
                     inactive: "无效",
                     links: "下载配置",
                     noLinks: "无可用链接",
+                    appDownload: "下载 OpenVPN 应用",
+                    client: "下载 OpenVPN 客户端",
                     dir: "ltr",
                     themeLight: "浅色", themeDark: "深色", themeSystem: "系统"
                 }
@@ -718,6 +744,11 @@
                 document.getElementById('links-label').textContent = dict.links;
                 const noLinksText = document.getElementById('no-links-text');
                 if (noLinksText) noLinksText.textContent = dict.noLinks;
+                // Update OpenVPN app download section
+                const appLabel = document.getElementById('app-download-label');
+                if (appLabel) appLabel.textContent = dict.appDownload;
+                const btnClient = document.getElementById('btn-client');
+                if (btnClient) btnClient.textContent = dict.client;
 
                 // Update Dropdown Text Localization
                 const themeItems = document.querySelectorAll('#theme-dropdown .dropdown-item');
