@@ -7,10 +7,10 @@ from backend.schema.output import Admins, ResponseModel
 from backend.auth.auth import get_current_user
 
 
-router = APIRouter(prefix="/admin", tags=["Admins"])
+router = APIRouter(prefix="/admins", tags=["Admins"])
 
 
-@router.get("/all", response_model=ResponseModel)
+@router.get("/", response_model=ResponseModel)
 async def get_all_admins(
     db: Session = Depends(get_db), user: dict = Depends(get_current_user)
 ):

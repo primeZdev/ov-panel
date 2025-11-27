@@ -14,10 +14,10 @@ from backend.node.task import (
     get_node_status_handler,
 )
 
-router = APIRouter(prefix="/node", tags=["Nodes"])
+router = APIRouter(prefix="/nodes", tags=["Nodes"])
 
 
-@router.post("/add", response_model=ResponseModel)
+@router.post("/", response_model=ResponseModel)
 async def add_node(
     request: NodeCreate,
     db: Session = Depends(get_db),
@@ -30,27 +30,27 @@ async def add_node(
     )
 
 
-@router.put("/update/{address}", response_model=ResponseModel)
+@router.put("/{node_id}", response_model=ResponseModel)
 async def update_node(
-    address: str,
+    node_id: int,
     request: NodeCreate,
     db: Session = Depends(get_db),
     user: dict = Depends(get_current_user),
 ):
-    result = await update_node_handler(address, request, db)
+    result = await update_node_handler(node_id, request, db)
     return ResponseModel(
         success=result,
         msg="Node updated successfully" if result else "Failed to update node",
     )
 
 
-@router.get("/status/{address}", response_model=ResponseModel)
+@router.get("/{node_id}/status/", response_model=ResponseModel)
 async def get_node_status(
-    address: str,
+    node_id: int,
     db: Session = Depends(get_db),
     user: dict = Depends(get_current_user),
 ):
-    node_status = await get_node_status_handler(address, db)
+    node_status = await get_node_status_handler(node_id, db)
     return ResponseModel(
         success=True,
         msg="Node status retrieved successfully",
@@ -58,7 +58,7 @@ async def get_node_status(
     )
 
 
-@router.get("/list", response_model=ResponseModel)
+@router.get("/", response_model=ResponseModel)
 async def list_nodes(
     db: Session = Depends(get_db),
     user: dict = Depends(get_current_user),
@@ -72,31 +72,29 @@ async def list_nodes(
 
 
 @router.get(
-    "/download/ovpn/{address}/{name}",
+    "/ovpn/{uuid}/{node_id}",
     description="Download OVPN client configuration from a node",
 )
 async def download_ovpn_client(
-    address: str,
-    name: str,
+    node_id: int,
+    uuid: str,
     db: Session = Depends(get_db),
     user: dict = Depends(get_current_user),
 ):
-    response = await download_ovpn_client_from_node(
-        db=db, node_address=address, name=name
-    )
+    response = await download_ovpn_client_from_node(db=db, uuid=uuid, node_id=node_id)
     if response:
         return response
     else:
         return ResponseModel(success=False, msg="OVPN file not found", data=None)
 
 
-@router.delete("/delete/{address}", response_model=ResponseModel)
+@router.delete("/{node_id}", response_model=ResponseModel)
 async def delete_node(
-    address: str,
+    node_id: int,
     db: Session = Depends(get_db),
     user: dict = Depends(get_current_user),
 ):
-    result = await delete_node_handler(address, db)
+    result = await delete_node_handler(node_id, db)
     return ResponseModel(
         success=result,
         msg="Node deleted successfully" if result else "Failed to delete node",

@@ -26,9 +26,9 @@ async def add_node_handler(request: NodeCreate, db: Session) -> bool:
         return False
 
 
-async def update_node_handler(address: str, request: NodeCreate, db: Session) -> bool:
+async def update_node_handler(node_id: int, request: NodeCreate, db: Session) -> bool:
     """Update a node"""
-    crud.update_node(db, address, request)
+    crud.update_node(db, node_id, request)
     restart_node = NodeRequests(
         address=request.address,
         port=request.port,
@@ -39,19 +39,19 @@ async def update_node_handler(address: str, request: NodeCreate, db: Session) ->
         set_new_setting=True,
     ).check_node()
 
-    logger.info(f"Node updated successfully: {address}")
+    logger.info(f"Node updated successfully: {request.address}:{request.port}")
     return restart_node
 
 
-async def delete_node_handler(address: str, db: Session) -> bool:
+async def delete_node_handler(node_id: int, db: Session) -> bool:
     """Delete a node"""
-    node = crud.get_node_by_address(db, address)
+    node = crud.get_node_by_id(db, node_id)
     if node:
         crud.delete_node(db, node.id)
-        logger.info(f"Node deleted successfully: {address}")
+        logger.info(f"Node deleted successfully: {node.name}")
         return True
     else:
-        logger.warning(f"Failed to delete node: {address}")
+        logger.warning(f"Failed to delete node: {node.name}")
         return False
 
 
@@ -61,6 +61,7 @@ async def list_nodes_handler(db: Session) -> list:
     nodes = crud.get_all_nodes(db)
     for node in nodes:
         node_info = {
+            "id": node.id,
             "name": node.name,
             "address": node.address,
             "tunnel-address": node.tunnel_address,
@@ -73,17 +74,18 @@ async def list_nodes_handler(db: Session) -> list:
     return nodes_list
 
 
-async def get_node_status_handler(address: str, db: Session):
+async def get_node_status_handler(node_id: int, db: Session):
     """Get the status of a node"""
-    node = crud.get_node_by_address(db, address)
+    node = crud.get_node_by_id(db, node_id)
     if node:
         node_status = NodeRequests(
             address=node.address, port=node.port, api_key=node.key
         ).get_node_info()
+        print(node_status)
         return {
             "address": node.address,
             "port": node.port,
-            "status": "active" if node.status and node_status else "inactive",
+            "status": "active" if node.status else "inactive",
             "node_info": node_status,
         }
     return None
@@ -109,9 +111,11 @@ async def create_user_on_all_nodes(name: str, db: Session):
                 )
 
 
-async def change_user_status_on_all_nodes(name: str, status: bool, db: Session):
+async def change_user_status_on_all_nodes(
+    uuid: str, name: str, status: bool, db: Session
+):
     nodes = crud.get_all_nodes(db)
-    crud.change_user_status(db, name, status)
+    crud.change_user_status(db, uuid, status)
 
     if nodes:
         for node in nodes:
@@ -131,16 +135,19 @@ async def change_user_status_on_all_nodes(name: str, status: bool, db: Session):
 
 
 async def download_ovpn_client_from_node(
-    name: str, node_address: str, db: Session
+    uuid: str, node_id: int, db: Session
 ) -> Response | None:
     """Download OVPN client from a node"""
-    node = crud.get_node_by_address(db, node_address)
+    node = crud.get_node_by_id(db, node_id)
+    user = crud.get_user_by_uuid(db, uuid)
+    if not node or not user:
+        return None
     result = NodeRequests(
         address=node.address, port=node.port, api_key=node.key
-    ).download_ovpn_client(f"{name}-{node.name}")
+    ).download_ovpn_client(f"{user.name}-{node.name}")
     if result:
         logger.info(
-            f"OVPN client downloaded for user '{name}-{node.name}' on node {node.address}:{node.port}"
+            f"OVPN client downloaded for user '{user.name}-{node.name}' on node {node.address}:{node.port}"
         )
         return result
     return None

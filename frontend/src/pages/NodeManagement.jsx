@@ -5,27 +5,28 @@ import AddNodeModal from '../components/AddNodeModal';
 import EditNodeModal from '../components/EditNodeModal';
 import NodeTable from '../components/NodeTable';
 import UserStatCard from '../components/UserStatCard';
-import Pagination from '../components/Pagination'; 
+import Pagination from '../components/Pagination';
 import { useTranslation } from 'react-i18next';
 
 const ITEMS_PER_PAGE = 10;
 
 const NodeManagement = () => {
   const [nodes, setNodes] = useState([]);
+  const [nodeInfo, setNodeInfo] = useState({});
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedNode, setSelectedNode] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const { t } = useTranslation();
-  
-  
+
+
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
 
   const fetchNodes = useCallback(async () => {
     setIsLoading(true);
     try {
-      const response = await apiClient.get('/node/list');
+      const response = await apiClient.get('/nodes/');
       if (response.data.success) {
         setNodes(response.data.data || []);
       }
@@ -40,6 +41,27 @@ const NodeManagement = () => {
     fetchNodes();
   }, [fetchNodes]);
 
+
+  useEffect(() => {
+    let intervalId;
+    const fetchAllNodeStatus = async () => {
+      if (!nodes || nodes.length === 0) return;
+      const info = {};
+      await Promise.all(nodes.map(async (node) => {
+        try {
+          const res = await apiClient.get(`/nodes/${node.id}/status/`);
+          if (res.data.success && res.data.data && res.data.data.node_info) {
+            info[node.id] = res.data.data.node_info;
+          }
+        } catch (e) { }
+      }));
+      setNodeInfo(info);
+    };
+    fetchAllNodeStatus();
+    intervalId = setInterval(fetchAllNodeStatus, 10000);
+    return () => clearInterval(intervalId);
+  }, [nodes]);
+
   const nodeStats = useMemo(() => {
     const activeCount = nodes.filter((node) => node.status).length;
     return {
@@ -49,7 +71,7 @@ const NodeManagement = () => {
     };
   }, [nodes]);
 
-  
+
   const filteredNodes = useMemo(() => {
     return nodes.filter(node =>
       node.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -65,16 +87,16 @@ const NodeManagement = () => {
 
   const handleSearchChange = (event) => {
     setSearchTerm(event.target.value);
-    setCurrentPage(1); 
+    setCurrentPage(1);
   };
 
 
-  const handleDelete = async (nodeAddress, nodeName) => {
+  const handleDelete = async (nodeId, nodeName) => {
     if (!window.confirm(`${t('deleteNodeConfirm')} ${nodeName}?`)) {
       return;
     }
     try {
-      const response = await apiClient.delete(`/node/delete/${nodeAddress}`);
+      const response = await apiClient.delete(`/nodes/${nodeId}`);
       if (response.data.success) {
         alert('Node deleted successfully.');
         fetchNodes();
@@ -86,13 +108,13 @@ const NodeManagement = () => {
     }
   };
 
-  const handleCheckStatus = async (nodeAddress) => {
+  const handleCheckStatus = async (nodeId) => {
     try {
-        const response = await apiClient.get(`/node/status/${nodeAddress}`);
-        alert(response.data.msg || 'Status check complete.');
-        fetchNodes();
+      const response = await apiClient.get(`/nodes/${nodeId}/status/`);
+      alert(response.data.msg || 'Status check complete.');
+      fetchNodes();
     } catch (error) {
-        alert('Failed to check node status.');
+      alert('Failed to check node status.');
     }
   };
 
@@ -100,7 +122,7 @@ const NodeManagement = () => {
     setIsAddModalOpen(false);
     fetchNodes();
   };
-  
+
   const handleOpenEditModal = (node) => {
     setSelectedNode(node);
     setIsEditModalOpen(true);
@@ -163,9 +185,10 @@ const NodeManagement = () => {
         />
       </div>
 
-      <NodeTable 
-        nodes={paginatedNodes} 
-        isLoading={isLoading} 
+      <NodeTable
+        nodes={paginatedNodes}
+        isLoading={isLoading}
+        nodeInfo={nodeInfo}
         onDelete={handleDelete}
         onCheckStatus={handleCheckStatus}
         onEdit={handleOpenEditModal}
@@ -177,7 +200,7 @@ const NodeManagement = () => {
           onNodeCreated={handleNodeCreated}
         />
       )}
-      
+
       {isEditModalOpen && (
         <EditNodeModal
           node={selectedNode}
@@ -185,7 +208,7 @@ const NodeManagement = () => {
           onNodeUpdated={handleNodeUpdated}
         />
       )}
-      
+
     </div>
   );
 };

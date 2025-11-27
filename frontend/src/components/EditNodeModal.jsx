@@ -58,7 +58,7 @@ const EditNodeModal = ({ node, onClose, onNodeUpdated }) => {
     };
 
     try {
-      const response = await apiClient.put(`/node/update/${originalAddress}`, payload);
+      const response = await apiClient.put(`/nodes/${node.id}`, payload);
       if (response.data.success) {
         alert('Node updated successfully.');
         onNodeUpdated();

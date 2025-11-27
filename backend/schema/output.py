@@ -14,6 +14,7 @@ class Users(BaseModel):
     is_active: bool
     expiry_date: date
     owner: str
+    uuid: str
 
     class Config:
         from_attributes = True
@@ -34,12 +35,8 @@ class ServerInfo(BaseModel):
 
 
 class Settings(BaseModel):
-    tunnel_address: Optional[str] = None
-    port: int
-    protocol: Optional[str]
-
-    class Config:
-        from_attributes = True
+    subscription_url_prefix: str
+    subscription_path: str
 
 
 class Admins(BaseModel):

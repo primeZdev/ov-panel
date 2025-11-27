@@ -1,9 +1,50 @@
 import { useTranslation } from 'react-i18next';
+import { FiCopy } from 'react-icons/fi';
 import ActionsDropdown from './ActionsDropdown';
 import './UserTable.css';
 
-const UserTable = ({ users, onDelete, onDownload, onEdit, onToggleStatus }) => {
+const UserTable = ({ users, onDelete, onDownload, onEdit, onToggleStatus, getSubscriptionLink }) => {
   const { t } = useTranslation();
+
+  const handleCopyLink = (user) => {
+    if (!getSubscriptionLink) return;
+    const link = getSubscriptionLink(user) || '';
+
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(link).then(() => {
+        window.alert(t('copied_subscription_link', 'Subscription link copied!'));
+      }).catch(() => {
+        fallbackCopyTextToClipboard(link);
+      });
+    } else {
+      fallbackCopyTextToClipboard(link);
+    }
+  };
+
+  // Fallback for insecure context (http)
+  function fallbackCopyTextToClipboard(text) {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.style.position = 'fixed';
+    textArea.style.top = 0;
+    textArea.style.left = 0;
+    textArea.style.width = '2em';
+    textArea.style.height = '2em';
+    textArea.style.padding = 0;
+    textArea.style.border = 'none';
+    textArea.style.outline = 'none';
+    textArea.style.boxShadow = 'none';
+    textArea.style.background = 'transparent';
+    document.body.appendChild(textArea);
+    textArea.select();
+    try {
+      document.execCommand('copy');
+      window.alert(t('copied_subscription_link', 'Subscription link copied!'));
+    } catch (err) {
+      window.alert(t('copy_failed', 'Failed to copy link.'));
+    }
+    document.body.removeChild(textArea);
+  }
 
   return (
     <div className="table-container">
@@ -31,7 +72,7 @@ const UserTable = ({ users, onDelete, onDownload, onEdit, onToggleStatus }) => {
                   </span>
                 </td>
                 <td>{user.owner}</td>
-                <td style={{ textAlign: 'right' }}>
+                <td style={{ textAlign: 'right', display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <ActionsDropdown
                     actions={[
                       { label: t('editButton'), onClick: () => onEdit(user) },
@@ -43,11 +84,19 @@ const UserTable = ({ users, onDelete, onDownload, onEdit, onToggleStatus }) => {
                       },
                       {
                         label: t('deleteButton'),
-                        onClick: () => onDelete(user.name),
+                        onClick: () => onDelete(user.uuid, user.name),
                         className: 'danger-action',
                       },
                     ]}
                   />
+                  <button
+                    className="icon-btn btn-copy"
+                    title={t('copySubscriptionLink', 'Copy Link')}
+                    onClick={() => handleCopyLink(user)}
+                    style={{ background: 'none', border: 'none', padding: 0, marginLeft: 6, cursor: 'pointer' }}
+                  >
+                    <FiCopy style={{ fontSize: 20, color: '#90caf9' }} />
+                  </button>
                 </td>
               </tr>
             ))

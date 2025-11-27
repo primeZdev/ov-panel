@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
 
 from backend.db.engine import get_db
@@ -6,24 +6,34 @@ from backend.db import crud
 from backend.auth.auth import get_current_user
 from backend.operations.server_info import get_server_info
 from backend.schema.output import Settings, ServerInfo, ResponseModel
+from backend.config import config
 
-router = APIRouter(prefix="/settings", tags=["Panel Settings"])
+router = APIRouter(prefix="/server", tags=["Panel Settings"])
 
 
-@router.get("/", response_model=ResponseModel)
+@router.get("/settings", response_model=ResponseModel)
 async def get_settings(
-    db: Session = Depends(get_db), user: str = Depends(get_current_user)
+    request: Request,
+    db: Session = Depends(get_db),
+    user: str = Depends(get_current_user),
 ):
-    settings = crud.get_settings(db)
+    settings = Settings(
+        subscription_path=config.SUBSCRIPTION_PATH,
+        subscription_url_prefix=(
+            config.SUBSCRIPTION_URL_PREFIX + "/"
+            if config.SUBSCRIPTION_URL_PREFIX is not None
+            else str(request.base_url)
+        ),
+    )
     return ResponseModel(
         success=True,
         msg="Settings retrieved successfully",
-        data=Settings.from_orm(settings),
+        data=settings,
     )
 
 
 @router.get(
-    "/server/info",
+    "/info",
     response_model=ResponseModel,
     description="Get server information (cpu, memory, ...)",
 )

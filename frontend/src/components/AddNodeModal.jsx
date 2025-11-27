@@ -39,7 +39,7 @@ const AddNodeModal = ({ onClose, onNodeCreated }) => {
     };
 
     try {
-      const response = await apiClient.post('/node/add', payload);
+      const response = await apiClient.post('/nodes/', payload);
       if (response.data.success) {
         alert('Node created successfully.');
         onNodeCreated();
@@ -104,7 +104,7 @@ const AddNodeModal = ({ onClose, onNodeCreated }) => {
             <input type="checkbox" id="status" name="status" checked={formData.status} onChange={handleChange} />
             <label htmlFor="status" style={{ marginBottom: 0 }}>{t('status_active')}</label>
           </div>
-          
+
           <div className="modal-footer">
             <button type="button" onClick={onClose} className="btn btn-secondary">{t('cancelButton')}</button>
             <LoadingButton isLoading={isLoading} type="submit" className="btn">

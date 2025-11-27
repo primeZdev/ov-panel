@@ -19,7 +19,7 @@ const DownloadFromNodeModal = ({ node, onClose }) => {
     setIsLoading(true);
 
     try {
-      const response = await apiClient.get(`/node/download/ovpn/${node.address}/${username}`, {
+      const response = await apiClient.get(`/nodes/ovpn/${node.id}/${username}`, {
         responseType: 'blob',
       });
 

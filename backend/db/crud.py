@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
 from datetime import datetime
+from uuid import uuid4
 
 from backend.logger import logger
 from backend.schema._input import CreateUser, UpdateUser, NodeCreate
@@ -19,6 +20,13 @@ def get_user_by_name(db: Session, name: str):
     return None
 
 
+def get_user_by_uuid(db: Session, uuid: str):
+    user = db.query(User).filter(User.uuid == uuid).first()
+    if user:
+        return user
+    return None
+
+
 def create_user(db: Session, request: CreateUser, owner: str):
     username = request.name.replace(" ", "_")
 
@@ -28,9 +36,7 @@ def create_user(db: Session, request: CreateUser, owner: str):
         )
 
     new_user = User(
-        name=username,
-        expiry_date=request.expiry_date,
-        owner=owner,
+        name=username, expiry_date=request.expiry_date, owner=owner, uuid=str(uuid4())
     )
 
     db.add(new_user)
@@ -40,8 +46,8 @@ def create_user(db: Session, request: CreateUser, owner: str):
     return new_user
 
 
-def update_user(db: Session, request: UpdateUser):
-    user = db.query(User).filter(User.name == request.name).first()
+def update_user(db: Session, uuid: str, request: UpdateUser):
+    user = db.query(User).filter(User.uuid == uuid).first()
     if not user:
         raise HTTPException(status_code=404, detail="user not found on database")
 
@@ -56,15 +62,15 @@ def update_user(db: Session, request: UpdateUser):
     return {"detail": "User updated successfully"}
 
 
-def change_user_status(db: Session, name: str, status: bool) -> bool:
+def change_user_status(db: Session, uuid: str, status: bool) -> bool:
     try:
-        user = db.query(User).filter(User.name == name).first()
+        user = db.query(User).filter(User.uuid == uuid).first()
         user.is_active = status
         db.commit()
         db.refresh(user)
         return True
     except Exception as e:
-        logger.error(f"Error when change status for user:{name} on db: {e}")
+        logger.error(f"Error when change status for user:{user.name} on db: {e}")
         return False
 
 
@@ -108,6 +114,14 @@ def get_node_by_address(db: Session, address: str):
     return db.query(Node).filter(Node.address == address).first()
 
 
+def get_node_by_id(db: Session, id: int):
+    return db.query(Node).filter(Node.id == id).first()
+
+
+def get_node_by_name(db: Session, name: str):
+    return db.query(Node).filter(Node.name == name).first()
+
+
 def create_node(db: Session, request: NodeCreate):
     new_node = Node(
         name=request.name,
@@ -126,8 +140,8 @@ def create_node(db: Session, request: NodeCreate):
     return new_node
 
 
-def update_node(db: Session, address: str, request: NodeCreate):
-    node = db.query(Node).filter(Node.address == address).first()
+def update_node(db: Session, node_id: int, request: NodeCreate):
+    node = db.query(Node).filter(Node.id == node_id).first()
     if not node:
         raise HTTPException(status_code=404, detail="Node not found")
 

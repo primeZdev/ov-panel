@@ -93,11 +93,10 @@ def ask_password(prompt):
 def show_banner():
     subprocess.run("clear")
     banner = f"""
-{Fore.CYAN} ____  _     ____  ____  _      _____ _    
-/  _ \\/ \\ |\\/  __\\/  _ \\/ \\  /|/  __// \\   
-| / \\|| | //|  \\/|| / \\|| |\\ |||  \\  | |   
-| \\_/|| \\// |  __/| |-||| | \\|||  /_ | |_/\\\\
-\\____/\\__/  \\_/   \\_/ \\|\\_/  \\|\\____\\\\____/
+{Fore.CYAN}
+╔═══════════════════╗
+║      OVPANEL      ║
+╚═══════════════════╝
 {Style.RESET_ALL}
 """
     print(banner)
@@ -222,9 +221,7 @@ def setup_panel():
 
 
 def refresh_panel():
-    if not os.path.exists("/opt/ov-panel") or not os.path.exists(
-        "/etc/systemd/system/ov-panel.service"
-    ):
+    if not os.path.exists("/opt/ov-panel"):
         subprocess.run("clear")
         print(
             f"\n{Fore.MAGENTA}OV-Panel is not installed on your system.{Style.RESET_ALL}"
@@ -287,8 +284,7 @@ def refresh_panel():
         os.chdir(install_dir)
         subprocess.run(["uv", "sync", "--refresh"], check=True)
         apply_migrations()
-
-        subprocess.run(["systemctl", "restart", "ov-panel"], check=True)
+        start_service()
 
         print(f"\n{Fore.GREEN}Update Complete!{Style.RESET_ALL}\n")
 
@@ -416,6 +412,9 @@ def apply_migrations() -> None:
 
 
 def start_service() -> None:
+    path = "/etc/systemd/system/ov-panel.service"
+    if os.path.exists(path):
+        os.remove(path)
     service_content = """
 [Unit]
 Description=OV-Panel App
@@ -423,19 +422,18 @@ After=network.target
 
 [Service]
 WorkingDirectory=/opt/ov-panel
-ExecStart=/opt/ov-panel_venv/bin/uv run main.py
+ExecStart=/root/.local/bin/uv run main.py
 Restart=always
 RestartSec=5
 User=root
-Environment="PATH=/opt/ov-panel_venv/bin"
-Environment="VIRTUAL_ENV=/opt/ov-panel_venv"
+Environment="PATH=/root/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
 [Install]
 WantedBy=multi-user.target
 
 """
 
-    with open("/etc/systemd/system/ov-panel.service", "w") as f:
+    with open(path, "w") as f:
         f.write(service_content)
 
     subprocess.run(["sudo", "systemctl", "daemon-reload"])

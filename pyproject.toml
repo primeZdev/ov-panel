@@ -7,10 +7,11 @@ requires-python = ">=3.12"
 dependencies = [
     "fastapi",
     "uvicorn",
+    "jinja2",
     "requests",
     "pydantic_settings",
     "alembic==1.15.1",
-    "SQLAlchemy",
+    "SQLAlchemy==2.0",
     "python-dotenv==1.1.0",
     "pexpect",
     "psutil",

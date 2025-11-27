@@ -22,7 +22,7 @@ const formatUptime = (seconds) => {
 const StatCard = ({ icon, label, value, subValue, className, color }) => {
   return (
     <div className={`stat-card ${className}`}>
-       <div className="icon-background" style={{ backgroundColor: color ? `${color}20` : 'var(--accent-color-transparent)' }}>
+      <div className="icon-background" style={{ backgroundColor: color ? `${color}20` : 'var(--accent-color-transparent)' }}>
         {icon}
       </div>
       <div className="stat-card-content">
@@ -62,8 +62,8 @@ const ServerStats = () => {
   useEffect(() => {
     const fetchServerData = async () => {
       try {
-        
-        const response = await apiClient.get('/settings/server/info');
+
+        const response = await apiClient.get('/server/info');
         if (response.data.success) {
           setStats(response.data.data);
         }
@@ -74,7 +74,7 @@ const ServerStats = () => {
 
     const fetchNodes = async () => {
       try {
-        const response = await apiClient.get('/node/list');
+        const response = await apiClient.get('/nodes/');
         if (response.data.success) {
           setNodes(response.data.data || []);
         }
@@ -85,7 +85,7 @@ const ServerStats = () => {
 
     const fetchUsers = async () => {
       try {
-        const response = await apiClient.get('/user/all');
+        const response = await apiClient.get('/users/');
         if (response.data.success) {
           setUsers(response.data.data || []);
         }

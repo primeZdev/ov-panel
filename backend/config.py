@@ -1,6 +1,7 @@
 import os
 from pydantic_settings import BaseSettings
 from typing import Optional
+from fastapi import Request
 
 
 class Setting(BaseSettings):
@@ -16,6 +17,8 @@ class Setting(BaseSettings):
     SSL_CERTFILE: Optional[str] = None
     JWT_SECRET_KEY: str
     JWT_ACCESS_TOKEN_EXPIRES: int = 86400  # in seconds
+    SUBSCRIPTION_URL_PREFIX: Optional[str] = None
+    SUBSCRIPTION_PATH: str = "sub"
 
     class Config:
         env_file = os.path.join(os.path.dirname(__file__), "..", ".env")
