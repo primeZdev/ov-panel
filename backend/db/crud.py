@@ -3,14 +3,37 @@ from fastapi import HTTPException
 from datetime import datetime
 from uuid import uuid4
 
+from backend.auth.hash import hash_password
 from backend.logger import logger
-from backend.schema._input import CreateUser, UpdateUser, NodeCreate
+from backend.schema._input import AdminCreate, CreateUser, UpdateUser, NodeCreate
 from .models import User, Admin, Node, Settings
 
 
 def get_all_users(db: Session):
     users = db.query(User).all()
     return users
+
+
+def get_admin_by_username(db: Session, username: str):
+    admin = db.query(Admin).filter(Admin.username == username).first()
+    return admin
+
+
+def create_admin(db: Session, admin: AdminCreate):
+    hashed_password = hash_password(admin.password)
+    new_admin = Admin(username=admin.username, password=hashed_password)
+    db.add(new_admin)
+    db.commit()
+    db.refresh(new_admin)
+    return new_admin
+
+
+def update_admin(db: Session, existing_admin: Admin, admin: AdminCreate):
+    existing_admin.password = hash_password(admin.password)
+
+    db.commit()
+    db.refresh(existing_admin)
+    return existing_admin
 
 
 def get_user_by_name(db: Session, name: str):
