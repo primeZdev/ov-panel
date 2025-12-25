@@ -6,11 +6,12 @@ import DashboardLayout from './pages/DashboardLayout';
 import ServerStats from './pages/ServerStats';
 import UserManagement from './pages/UserManagement';
 import NodeManagement from './pages/NodeManagement';
+import AdminManagement from './pages/AdminManagement';
 
 import favicon from './assets/fav.webp';
 
 function App() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, userRole } = useAuth();
 
 
   useEffect(() => {
@@ -36,7 +37,8 @@ function App() {
         element={isAuthenticated ? <DashboardLayout /> : <Navigate to="/login" />}>
         <Route index element={<ServerStats />} />
         <Route path="users" element={<UserManagement />} />
-        <Route path="nodes" element={<NodeManagement />} />
+        {userRole !== 'admin' && <Route path="nodes" element={<NodeManagement />} />}
+        {userRole === 'main_admin' && <Route path="admins" element={<AdminManagement />} />}
       </Route>
       <Route path="*" element={<Navigate to={isAuthenticated ? "/" : "/login"} />} />
     </Routes>
