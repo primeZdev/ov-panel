@@ -4,6 +4,8 @@ from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
 from jose import JWTError, jwt
 from passlib.context import CryptContext
+
+from backend.auth.hash import verify_password
 from backend.db.engine import get_db
 from backend.config import config
 from backend.db import crud
@@ -13,9 +15,6 @@ ALGORITHM = "HS256"
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 router = APIRouter(tags=["Login"])
-
-def verify_password(plain_password, hashed_password):
-    return pwd_context.verify(plain_password, hashed_password)
 
 
 def authenticate_user(db: Session, username: str, password: str):
@@ -39,6 +38,7 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
 
     return jwt.encode(to_encode, config.JWT_SECRET_KEY, algorithm=ALGORITHM)
 
+
 @router.post("/login")
 async def login(
     form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)
@@ -53,13 +53,13 @@ async def login(
 
     access_token_expires = timedelta(seconds=config.JWT_ACCESS_TOKEN_EXPIRES)
     access_token = create_access_token(
-        data={"sub": admin["username"], "role": admin["type"]},
+        data={"sub": admin["username"], "type": admin["type"]},
         expires_delta=access_token_expires,
     )
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"/{config.URLPATH}/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"/api/login")
 
 
 def get_current_user(token: str = Depends(oauth2_scheme)):
@@ -70,7 +70,7 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
     )
     try:
         payload = jwt.decode(token, config.JWT_SECRET_KEY, algorithms=[ALGORITHM])
-  
+
         username: str = payload.get("sub")
         user_type: str = payload.get("type")
         if username is None:

@@ -13,6 +13,9 @@ def get_all_users(db: Session):
     users = db.query(User).all()
     return users
 
+def get_users_by_admin(db: Session, admin_username: str):
+    users = db.query(User).filter(User.owner == admin_username).all()
+    return users
 
 def get_admin_by_username(db: Session, username: str):
     admin = db.query(Admin).filter(Admin.username == username).first()

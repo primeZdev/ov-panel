@@ -16,10 +16,18 @@ async def get_all_admins(
     db: Session = Depends(get_db), user: dict = Depends(get_current_user)
 ):
     result = crud.get_all_admins(db)
+    users = crud.get_all_users(db)
+
+    admin_list = []
+    for admin in result:
+        admin_data = Admins.from_orm(admin)
+        admin_data.users_count = sum(1 for u in users if u.owner == admin.username)
+        admin_list.append(admin_data)
+
     return ResponseModel(
         success=True,
         msg="Admins retrieved successfully",
-        data=[Admins.from_orm(admin) for admin in result],
+        data=admin_list,
     )
 
 

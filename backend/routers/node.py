@@ -23,6 +23,9 @@ async def add_node(
     db: Session = Depends(get_db),
     user: dict = Depends(get_current_user),
 ):
+    if user["type"] != "main_admin":
+        return ResponseModel(success=False, msg="Unauthorized access", data=None)
+
     new_node = await add_node_handler(request, db)
     return ResponseModel(
         success=new_node,
@@ -37,6 +40,9 @@ async def update_node(
     db: Session = Depends(get_db),
     user: dict = Depends(get_current_user),
 ):
+    if user["type"] != "main_admin":
+        return ResponseModel(success=False, msg="Unauthorized access", data=None)
+
     result = await update_node_handler(node_id, request, db)
     return ResponseModel(
         success=result,
@@ -50,6 +56,9 @@ async def get_node_status(
     db: Session = Depends(get_db),
     user: dict = Depends(get_current_user),
 ):
+    if user["type"] != "main_admin":
+        return ResponseModel(success=False, msg="Unauthorized access", data=None)
+
     node_status = await get_node_status_handler(node_id, db)
     return ResponseModel(
         success=True,
@@ -94,6 +103,9 @@ async def delete_node(
     db: Session = Depends(get_db),
     user: dict = Depends(get_current_user),
 ):
+    if user["type"] != "main_admin":
+        return ResponseModel(success=False, msg="Unauthorized access", data=None)
+
     result = await delete_node_handler(node_id, db)
     return ResponseModel(
         success=result,

@@ -41,6 +41,7 @@ class Settings(BaseModel):
 
 class Admins(BaseModel):
     username: str
+    users_count: int = 0
 
     class Config:
         from_attributes = True

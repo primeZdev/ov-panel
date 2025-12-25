@@ -20,12 +20,27 @@ router = APIRouter(prefix="/users", tags=["Users"])
 async def get_all_users(
     db: Session = Depends(get_db), user: dict = Depends(get_current_user)
 ):
-    all_users = crud.get_all_users(db)
-    users_list = [Users.from_orm(user) for user in all_users]
+    if user["type"] == "main_admin":
+        all_users = crud.get_all_users(db)
+        users_list = [Users.from_orm(user) for user in all_users]
+        return ResponseModel(
+            success=True,
+            msg="Users retrieved successfully",
+            data=users_list,
+        )
+
+    elif user["type"] == "admin":
+        admin_users = crud.get_users_by_admin(db, admin_username=user["username"])
+        users_list = [Users.from_orm(u) for u in admin_users]
+        return ResponseModel(
+            success=True,
+            msg="Users retrieved successfully",
+            data=users_list,
+        )
+
     return ResponseModel(
-        success=True,
-        msg="Users retrieved successfully",
-        data=users_list,
+        success=False,
+        msg="Unauthorized access",
     )
 
 
@@ -40,6 +55,10 @@ async def create_user(
         return ResponseModel(
             success=False, msg="User with this name already exists", data=None
         )
+
+    if user["type"] == "admin":
+        crud.create_user(db, request, user["username"])
+        return ResponseModel(success=True, msg="User created successfully", data=None)
 
     crud.create_user(db, request, "owner")
     return ResponseModel(
