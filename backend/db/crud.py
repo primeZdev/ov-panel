@@ -13,9 +13,11 @@ def get_all_users(db: Session):
     users = db.query(User).all()
     return users
 
+
 def get_users_by_admin(db: Session, admin_username: str):
     users = db.query(User).filter(User.owner == admin_username).all()
     return users
+
 
 def get_admin_by_username(db: Session, username: str):
     admin = db.query(Admin).filter(Admin.username == username).first()
@@ -128,6 +130,12 @@ def it_is_admin(db: Session, username: str):
     if not admin:
         return False
     return admin
+
+
+def delete_admin(db: Session, admin: Admin):
+    db.delete(admin)
+    db.commit()
+    return True
 
 
 # nodes crud

@@ -37,6 +37,11 @@ async def create_admin(
     db: Session = Depends(get_db),
     user: dict = Depends(get_current_user),
 ):
+    if user["type"] != "main_admin":
+        return ResponseModel(
+            success=False, msg="You do not have permission for this action", data=None
+        )
+
     existing_admin = crud.get_admin_by_username(db, username=admin.username)
     if existing_admin:
         return ResponseModel(
@@ -57,6 +62,11 @@ async def update_admin(
     db: Session = Depends(get_db),
     user: dict = Depends(get_current_user),
 ):
+    if user["type"] != "main_admin":
+        return ResponseModel(
+            success=False, msg="You do not have permission for this action", data=None
+        )
+
     existing_admin = crud.get_admin_by_username(db, username=admin.username)
     if not existing_admin:
         return ResponseModel(success=False, msg="Admin not found", data=None)
@@ -66,4 +76,27 @@ async def update_admin(
         success=True,
         msg="Admin updated successfully",
         data=Admins.from_orm(updated_admin),
+    )
+
+
+@router.delete("/{username}")
+async def delete_admin(
+    username: str,
+    db: Session = Depends(get_db),
+    user: dict = Depends(get_current_user),
+):
+    if user["type"] != "main_admin":
+        return ResponseModel(
+            success=False, msg="You do not have permission for this action", data=None
+        )
+
+    existing_admin = crud.get_admin_by_username(db, username=username)
+    if not existing_admin:
+        return ResponseModel(success=False, msg="Admin not found", data=None)
+
+    crud.delete_admin(db, existing_admin)
+    return ResponseModel(
+        success=True,
+        msg="Admin deleted successfully",
+        data=None,
     )
