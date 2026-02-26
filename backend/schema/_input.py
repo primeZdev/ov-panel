@@ -5,12 +5,15 @@ from typing import Optional
 
 class CreateUser(BaseModel):
     name: str = Field(min_length=3, max_length=10)
-    # traffic: int = Field(default=0, ge=0, le=999) # canceled for now
+    total: Optional[float] = None
+    used: Optional[float] = None
     expiry_date: date
 
 
 class UpdateUser(BaseModel):
     name: str
+    total: Optional[float] = None
+    used: Optional[float] = None
     expiry_date: Optional[date]
     status: bool = True
 

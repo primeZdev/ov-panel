@@ -12,6 +12,8 @@ class ResponseModel(BaseModel):
 class Users(BaseModel):
     name: str
     is_active: bool
+    total: Optional[float] = None
+    used: Optional[float] = None
     expiry_date: date
     owner: str
     uuid: str
