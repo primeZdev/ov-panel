@@ -11,6 +11,7 @@ class User(Base):
     uuid: Mapped[str] = mapped_column(unique=True, nullable=True)
     name: Mapped[str] = mapped_column(unique=True)
     total: Mapped[int] = mapped_column(BigInteger, nullable=True)
+    used: Mapped[int] = mapped_column(BigInteger, nullable=True)
     expiry_date: Mapped[date]
     is_active: Mapped[bool] = mapped_column(default=True)
     owner: Mapped[str] = mapped_column(nullable=False)
