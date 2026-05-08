@@ -64,7 +64,11 @@ def create_user(db: Session, request: CreateUser, owner: str):
         )
 
     new_user = User(
-        name=username, expiry_date=request.expiry_date, owner=owner, uuid=str(uuid4())
+        name=username,
+        expiry_date=request.expiry_date,
+        total=request.total,
+        owner=owner,
+        uuid=str(uuid4()),
     )
 
     db.add(new_user)
@@ -84,6 +88,7 @@ def update_user(db: Session, uuid: str, request: UpdateUser):
     else:
         user.is_active = False
     user.expiry_date = request.expiry_date
+    user.total = request.total
 
     db.commit()
     db.refresh(user)
@@ -108,6 +113,10 @@ def get_expired_users(db: Session):
         .filter(User.expiry_date < datetime.now(), User.is_active == True)
         .all()
     )
+
+
+def get_users_exceeded_traffic(db: Session):
+    return db.query(User).filter(User.used > User.total, User.is_active == True).all()
 
 
 def delete_user(db: Session, name: str):
