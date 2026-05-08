@@ -7,7 +7,7 @@ from apscheduler.triggers.cron import CronTrigger
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
-from backend.operations.daily_checks import check_user_expiry_date
+from backend.operations.daily_checks import enforce_user_limits, check_user_used_traffic
 from backend.config import config
 from backend.routers import all_routers
 from backend.routers.sub import router as subscription_router
@@ -42,9 +42,16 @@ def start_scheduler():
     """This function starts the scheduler for every 5 minutes tasks"""
     scheduler = AsyncIOScheduler()
     scheduler.add_job(
-        check_user_expiry_date,
-        CronTrigger(minute="*/5"),
-        id="check_user_expiry",
+        check_user_used_traffic,
+        CronTrigger(minute="*/2"),
+        id="check_user_used_traffic",
+        replace_existing=True,
+    )
+
+    scheduler.add_job(
+        enforce_user_limits,
+        CronTrigger(minute="*/3"),
+        id="enforce_user_limits",
         replace_existing=True,
     )
 

@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
-from backend.operations.daily_checks import check_user_expiry_date
+from backend.operations.daily_checks import enforce_user_limits
 from backend.schema.output import ResponseModel, Users
 from backend.schema._input import CreateUser, UpdateUser
 from backend.db.engine import get_db
@@ -74,7 +74,7 @@ async def update_user(
     user: dict = Depends(get_current_user),
 ):
     result = crud.update_user(db, uuid, request)
-    check_user_expiry_date()
+    enforce_user_limits()
     return ResponseModel(success=True, msg="User updated successfully", data=result)
 
 
