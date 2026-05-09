@@ -183,5 +183,4 @@ async def get_users_used_traffic(node: Node, db: Session) -> dict:
 
     if not response:
         return {}
-
     return response.get("users", {})

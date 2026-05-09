@@ -18,7 +18,7 @@ async def enforce_user_limits():
 
         for user in users_to_disable:
             user.is_active = False
-            await change_user_status_on_all_nodes(name=user.name, status=False, db=db)
+            await change_user_status_on_all_nodes(uuid=user.uuid, name=user.name, status=False, db=db)
             await asyncio.sleep(0.5)
 
         db.commit()
@@ -33,43 +33,67 @@ async def enforce_user_limits():
 
 async def check_user_used_traffic():
     db = next(get_db())
-    nodes = crud.get_all_nodes(db)
 
     try:
-        if nodes:
-            for node in nodes:
-                try:
-                    users = await get_users_used_traffic(node, db=db)
-                    logger.info(f"Traffic from node {node.address}: {users}")
+        nodes = crud.get_all_nodes(db)
 
-                    if users:
-                        all_users = {u.name: u for u in crud.get_all_users(db)}
+        if not nodes:
+            logger.warning("No nodes found")
+            return
 
-                        for username, used_bytes in users.items():
-                            clean_username = username.split("-")[0]
+        all_users = {u.name: u for u in crud.get_all_users(db)}
 
-                            user = all_users.get(clean_username)
-                            if user:
-                                logger.info(
-                                    f"User found: {clean_username}, old used: {user.used}, adding: {used_bytes}"
-                                )
-                                # Handle None value in used field
-                                user.used = (user.used or 0) + used_bytes
-                            else:
-                                logger.warning(f"User not found: {clean_username}")
+        for node in nodes:
+            try:
+                users = await get_users_used_traffic(node, db=db)
 
-                except Exception as e:
-                    db.rollback()
-                    logger.error(
-                        f"Error in users usage daily check -> {e}", exc_info=True
+                if not users:
+                    continue
+
+                for username, used_bytes in users.items():
+                    clean_username = username.split("-")[0]
+
+                    user = all_users.get(clean_username)
+
+                    if not user:
+                        logger.warning(f"User not found: {clean_username}")
+                        continue
+                    
+                    last_usage = user.last_node_usage or 0
+                    total_used = user.used or 0
+
+                    if used_bytes >= last_usage:
+                        delta = used_bytes - last_usage
+
+                    # counter reset / reconnect
+                    else:
+                        delta = used_bytes
+
+                    user.used = total_used + delta
+                    user.last_node_usage = used_bytes
+
+                    logger.info(
+                        f"[{clean_username}], last={last_usage}, current={used_bytes}, delta={delta} "
+
                     )
 
-        db.commit()
-        logger.info("Traffic update committed to database")
+                # commit per node
+                db.commit()
+
+                logger.info(f"Traffic data committed for node {node.address}")
+
+            except Exception as e:
+                db.rollback()
+
+                logger.error(
+                    f"Error while processing node " f"{node.address} -> {e}",
+                    exc_info=True,
+                )
 
     except Exception as e:
         db.rollback()
-        logger.error(f"Error in users usage daily check -> {e}", exc_info=True)
+
+        logger.error(f"Error in check_user_used_traffic -> {e}", exc_info=True)
 
     finally:
         db.close()

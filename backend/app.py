@@ -50,7 +50,7 @@ def start_scheduler():
 
     scheduler.add_job(
         enforce_user_limits,
-        CronTrigger(minute="*/3"),
+        CronTrigger(minute="*/5"),
         id="enforce_user_limits",
         replace_existing=True,
     )
