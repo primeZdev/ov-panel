@@ -25,7 +25,7 @@ class NodeRequests:
 
     def check_node(self) -> bool:
         """Checks the node status and sets new settings if necesary."""
-        api = f"http://{self.address}/sync/get-status"
+        api = f"http://{self.address}/sync/status"
         try:
             data = {
                 "tunnel_address": self.tunnel_address,
@@ -33,7 +33,7 @@ class NodeRequests:
                 "ovpn_port": self.ovpn_port,
                 "set_new_setting": self.set_new_setting,
             }
-            response = requests.post(
+            response = requests.get(
                 api, headers=self.headers, json=data, timeout=5
             ).json()
             if response.get("success"):
@@ -46,7 +46,7 @@ class NodeRequests:
             return False
 
     def get_node_info(self) -> dict:
-        api = f"http://{self.address}/sync/get-status"
+        api = f"http://{self.address}/sync/status"
         try:
             data = {
                 "tunnel_address": self.tunnel_address,
@@ -54,7 +54,7 @@ class NodeRequests:
                 "ovpn_port": self.ovpn_port,
                 "set_new_setting": self.set_new_setting,
             }
-            response = requests.post(
+            response = requests.get(
                 api, headers=self.headers, json=data, timeout=10
             ).json()
             if response.get("success"):
@@ -69,7 +69,7 @@ class NodeRequests:
             return {}
 
     def create_user(self, name: str) -> bool:
-        api = f"http://{self.address}/sync/create-user"
+        api = f"http://{self.address}/sync/user"
         data = {"name": name}
         try:
             response = requests.post(
@@ -87,10 +87,10 @@ class NodeRequests:
             return False
 
     def change_user_status(self, name, status):
-        api = f"http://{self.address}/sync/change-user-status"
+        api = f"http://{self.address}/sync/user"
         try:
             data = {"name": name, "status": "activate" if status else "deactivate"}
-            response = requests.post(
+            response = requests.put(
                 api, headers=self.headers, json=data, timeout=10
             ).json()
 
@@ -122,11 +122,10 @@ class NodeRequests:
         return None
 
     def delete_user(self, name: str) -> bool:
-        api = f"http://{self.address}/sync/delete-user"
-        data = {"name": name}
+        api = f"http://{self.address}/sync/user/{name}"
         try:
-            response = requests.post(
-                api, headers=self.headers, json=data, timeout=25
+            response = requests.delete(
+                api, headers=self.headers, timeout=25
             ).json()
             if response.get("success"):
                 return True
@@ -137,4 +136,20 @@ class NodeRequests:
                 return False
         except Exception as e:
             logger.error(f"Error deleting user on node {self.address}: {e}")
+            return False
+
+    def get_users_usage(self) ->dict | bool:
+        api = f"http://{self.address}/sync/usage"
+        try:
+            response = requests.get(api, headers=self.headers, timeout=25).json()
+            if response.get("success"):
+                logger.info(f"get users usage on node {self.address}: {response.get('msg')}")
+                return response.get("data")
+            else:
+                logger.error(
+                    f"Failed to get users usage on node {self.address}: {response.get('msg')}"
+                )
+                return False
+        except Exception as e:
+            logger.error(f"Error when getting users usage on node {self.address}: {e}")
             return False

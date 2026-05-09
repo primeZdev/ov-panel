@@ -5,6 +5,7 @@ from backend.logger import logger
 from backend.schema._input import NodeCreate
 from .requests import NodeRequests
 from backend.db import crud
+from backend.db.models import Node
 
 
 async def add_node_handler(request: NodeCreate, db: Session) -> bool:
@@ -173,3 +174,13 @@ async def delete_user_on_all_nodes(name: str, db: Session) -> bool:
                 )
         return True
     return False
+
+
+async def get_users_used_traffic(node: Node, db: Session) -> dict:
+    """Geting users usage on node"""
+    node_requests = NodeRequests(address=node.address, port=node.port, api_key=node.key)
+    response = node_requests.get_users_usage()
+
+    if not response:
+        return {}
+    return response.get("users", {})

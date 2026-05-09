@@ -47,7 +47,18 @@ const AddNodeModal = ({ onClose, onNodeCreated }) => {
         setError(response.data.msg || 'Unable to create node.');
       }
     } catch (err) {
-      setError(err.response?.data?.detail || 'An error occurred while creating the node.');
+      const errorData = err.response?.data;
+      let errorMessage = 'An error occurred while creating the node.';
+      if (errorData?.detail) {
+        if (Array.isArray(errorData.detail)) {
+          errorMessage = errorData.detail.map(item => item.msg).join(', ');
+        } else if (typeof errorData.detail === 'string') {
+          errorMessage = errorData.detail;
+        } else {
+          errorMessage = JSON.stringify(errorData.detail);
+        }
+      }
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -55,7 +66,7 @@ const AddNodeModal = ({ onClose, onNodeCreated }) => {
 
   return (
     <div className="modal-overlay">
-      <div className="modal">
+      <div className="modal" style={{ maxHeight: '80vh', overflowY: 'auto' }}>
         <div className="modal-header">
           <h3>{t('modal_createNodeTitle')}</h3>
           <button onClick={onClose} className="close-modal-btn">&times;</button>

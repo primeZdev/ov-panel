@@ -38,7 +38,7 @@ const NodeTable = ({ nodes, isLoading, nodeInfo = {}, onDelete, onCheckStatus, o
             nodes.map((node) => {
               const info = nodeInfo[node.id] || {};
               return (
-                <tr key={node.address}>
+                <tr key={node.id}>
                   <td>{node.name}</td>
                   <td>{node.address}</td>
                   <td>{node.protocol}</td>
@@ -64,7 +64,7 @@ const NodeTable = ({ nodes, isLoading, nodeInfo = {}, onDelete, onCheckStatus, o
                         { label: t('checkStatus'), onClick: () => onCheckStatus(node.id) },
                         {
                           label: t('deleteButton'),
-                          onClick: () => onDelete(node.address, node.name),
+                          onClick: () => onDelete(node.id, node.name),
                           className: 'danger-action',
                         },
                       ]}

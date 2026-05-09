@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import BigInteger
 from .engine import Base
 from datetime import date
 
@@ -9,6 +10,9 @@ class User(Base):
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     uuid: Mapped[str] = mapped_column(unique=True, nullable=True)
     name: Mapped[str] = mapped_column(unique=True)
+    total: Mapped[int] = mapped_column(BigInteger, nullable=True)
+    used: Mapped[int] = mapped_column(BigInteger, nullable=True)
+    last_node_usage: Mapped[int] = mapped_column(BigInteger, default=0)
     expiry_date: Mapped[date]
     is_active: Mapped[bool] = mapped_column(default=True)
     owner: Mapped[str] = mapped_column(nullable=False)

@@ -46,6 +46,8 @@ async def get_subscription(
             "request": request,
             "name": user.name,
             "expiry_date": user.expiry_date,
+            "total": user.total,
+            "used": user.used,
             "is_active": user.is_active,
             "ovpn_download_links": ovpn_download_links,
         },

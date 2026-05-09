@@ -6,16 +6,30 @@ import LoadingButton from './LoadingButton';
 const AddUserModal = ({ onClose, onUserAdded }) => {
   const [name, setName] = useState('');
   const [expiryDate, setExpiryDate] = useState('');
+  const [totalTraffic, setTotalTraffic] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { t } = useTranslation();
+
+  const bytesFromGB = (value) => {
+    const cleaned = value?.toString().trim();
+    if (!cleaned) return null;
+    const parsed = parseFloat(cleaned);
+    return Number.isNaN(parsed) ? null : Math.round(parsed * 1024 * 1024 * 1024);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
     try {
-      const response = await apiClient.post('/users/', { name: name, expiry_date: expiryDate });
+      const total = bytesFromGB(totalTraffic);
+      const payload = {
+        name: name,
+        expiry_date: expiryDate,
+        total,
+      };
+      const response = await apiClient.post('/users/', payload);
       if (response.data.success) {
         alert('User created successfully.');
         onUserAdded();
@@ -55,6 +69,18 @@ const AddUserModal = ({ onClose, onUserAdded }) => {
               value={expiryDate}
               onChange={(e) => setExpiryDate(e.target.value)}
               required
+            />
+          </div>
+          <div className="input-group">
+            <label htmlFor="new-user-total">{t('modal_totalTraffic')}</label>
+            <input
+              type="number"
+              id="new-user-total"
+              value={totalTraffic}
+              onChange={(e) => setTotalTraffic(e.target.value)}
+              min="0"
+              step="0.01"
+              placeholder={t('modal_totalTrafficPlaceholder')}
             />
           </div>
           <div className="modal-footer">
