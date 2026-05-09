@@ -66,7 +66,18 @@ const EditNodeModal = ({ node, onClose, onNodeUpdated }) => {
         setError(response.data.msg || 'Unable to update node.');
       }
     } catch (err) {
-      setError(err.response?.data?.detail || 'An error occurred while updating the node.');
+      const errorData = err.response?.data;
+      let errorMessage = 'An error occurred while updating the node.';
+      if (errorData?.detail) {
+        if (Array.isArray(errorData.detail)) {
+          errorMessage = errorData.detail.map(item => item.msg).join(', ');
+        } else if (typeof errorData.detail === 'string') {
+          errorMessage = errorData.detail;
+        } else {
+          errorMessage = JSON.stringify(errorData.detail);
+        }
+      }
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -76,7 +87,7 @@ const EditNodeModal = ({ node, onClose, onNodeUpdated }) => {
 
   return (
     <div className="modal-overlay">
-      <div className="modal">
+      <div className="modal" style={{ maxHeight: '80vh', overflowY: 'auto' }}>
         <div className="modal-header">
           <h3>{t('modal_editNodeTitle', 'Edit Node')}</h3>
           <button onClick={onClose} className="close-modal-btn">&times;</button>

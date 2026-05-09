@@ -6,6 +6,27 @@ import './UserTable.css';
 const UserTable = ({ users, onDelete, onDownload, onEdit, onToggleStatus, getSubscriptionLink }) => {
   const { t } = useTranslation();
 
+  const formatTrafficGB = (bytes) => {
+    if (bytes === null || bytes === undefined) return '-';
+    const gb = Number(bytes) / 1024 / 1024 / 1024;
+    if (!Number.isFinite(gb)) return '-';
+
+    if (gb < 1) {
+      return gb.toFixed(1);
+    }
+    // For values >= 1 GB, remove trailing zeros
+    return gb.toFixed(2).replace(/\.00$/, '').replace(/\.0$/, '');
+  };
+
+  const formatTrafficUsage = (used, total) => {
+    const usedText = formatTrafficGB(used);
+    const totalText = formatTrafficGB(total);
+    if (usedText === '-' && totalText === '-') return '-';
+    if (usedText === '-') return `- / ${totalText} GB`;
+    if (totalText === '-') return `${usedText} / -`;
+    return `${usedText} / ${totalText} GB`;
+  };
+
   const handleCopyLink = (user) => {
     if (!getSubscriptionLink) return;
     const link = getSubscriptionLink(user) || '';
@@ -53,6 +74,7 @@ const UserTable = ({ users, onDelete, onDownload, onEdit, onToggleStatus, getSub
           <tr>
             <th>{t('th_username')}</th>
             <th>{t('th_expiryDate')}</th>
+            <th>{t('th_totalTraffic')}</th>
             <th>{t('th_status')}</th>
             <th>{t('th_owner')}</th>
             <th>{t('th_actions')}</th>
@@ -60,12 +82,13 @@ const UserTable = ({ users, onDelete, onDownload, onEdit, onToggleStatus, getSub
         </thead>
         <tbody>
           {users.length === 0 ? (
-            <tr><td colSpan="5" style={{ textAlign: 'center' }}>No users found.</td></tr>
+            <tr><td colSpan="6" style={{ textAlign: 'center' }}>{t('noUsersFound')}</td></tr>
           ) : (
             users.map((user) => (
               <tr key={user.name}>
                 <td>{user.name}</td>
                 <td>{new Date(user.expiry_date).toLocaleDateString('en-CA')}</td>
+                <td>{formatTrafficUsage(user.used, user.total)} GB</td>
                 <td>
                   <span className={`status-${user.is_active ? 'active' : 'inactive'}`}>
                     {user.is_active ? t('status_active') : t('status_inactive')}

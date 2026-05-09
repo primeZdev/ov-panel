@@ -5,15 +5,33 @@ import LoadingButton from './LoadingButton';
 
 const EditUserModal = ({ user, onClose, onUserUpdated }) => {
   const [expiryDate, setExpiryDate] = useState('');
+  const [totalTraffic, setTotalTraffic] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { t } = useTranslation();
+
+  const bytesFromGB = (value) => {
+    const cleaned = value?.toString().trim();
+    if (!cleaned) return null;
+    const parsed = parseFloat(cleaned);
+    return Number.isNaN(parsed) ? null : Math.round(parsed * 1024 * 1024 * 1024);
+  };
+
+  const gbFromBytes = (bytes) => {
+    if (bytes === null || bytes === undefined) return '';
+    const gb = Number(bytes) / 1024 / 1024 / 1024;
+    if (!Number.isFinite(gb)) return '';
+    return parseFloat(gb.toFixed(2)).toString().replace(/\.00$/, '');
+  };
 
   useEffect(() => {
     if (user && user.expiry_date) {
       const date = new Date(user.expiry_date);
       const formattedDate = date.toISOString().split('T')[0];
       setExpiryDate(formattedDate);
+    }
+    if (user) {
+      setTotalTraffic(gbFromBytes(user.total));
     }
   }, [user]);
 
@@ -26,6 +44,7 @@ const EditUserModal = ({ user, onClose, onUserUpdated }) => {
     const payload = {
       name: user.name,
       expiry_date: expiryDate,
+      total: bytesFromGB(totalTraffic),
     };
 
     try {
@@ -70,6 +89,18 @@ const EditUserModal = ({ user, onClose, onUserUpdated }) => {
               value={expiryDate}
               onChange={(e) => setExpiryDate(e.target.value)}
               required
+            />
+          </div>
+          <div className="input-group">
+            <label htmlFor="edit-user-total">{t('modal_totalTraffic')}</label>
+            <input
+              type="number"
+              id="edit-user-total"
+              value={totalTraffic}
+              onChange={(e) => setTotalTraffic(e.target.value)}
+              min="0"
+              step="0.01"
+              placeholder={t('modal_totalTrafficPlaceholder')}
             />
           </div>
           <div className="modal-footer">
