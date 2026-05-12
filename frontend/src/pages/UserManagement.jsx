@@ -117,6 +117,22 @@ const UserManagement = () => {
     }
   };
 
+  const handleResetUsage = async (user) => {
+    if (!window.confirm(`Are you sure you want to reset usage for user ${user.name}?`)) return;
+
+    try {
+      const response = await apiClient.get(`/users/${user.uuid}`);
+      if (response.data.success) {
+        alert(`Usage for ${user.name} has been reset.`);
+        fetchUsers();
+      } else {
+        alert(`Failed to reset usage for ${user.name}.`);
+      }
+    } catch (error) {
+      alert('Error resetting usage.');
+    }
+  };
+
   const handleOpenDownloadModal = (user) => {
     setSelectedUser(user);
     setIsDownloadModalOpen(true);
@@ -204,6 +220,7 @@ const UserManagement = () => {
         onDownload={handleOpenDownloadModal}
         onEdit={handleEdit}
         onToggleStatus={handleToggleStatus}
+        onResetUsage={handleResetUsage}
         getSubscriptionLink={getSubscriptionLink}
       />
       {isAddModalOpen && (

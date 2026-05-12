@@ -47,6 +47,7 @@
     "downloadButton": "دانلود",
     "deleteButton": "حذف",
     "editButton": "ویرایش",
+    "resetUsageButton": "بازنشانی مصرف",
     "downloadConfig": "دریافت کانفیگ",
     "checkStatus": "بررسی وضعیت",
     "downloadConfigFromNode": "دانلود کانفیگ از",

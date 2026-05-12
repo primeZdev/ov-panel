@@ -107,6 +107,14 @@ def change_user_status(db: Session, uuid: str, status: bool) -> bool:
         logger.error(f"Error when change status for user:{user.name} on db: {e}")
         return False
 
+def reset_user_usage(db: Session, uuid: str) -> bool:
+    user = db.query(User).filter(User.uuid == uuid).first()
+    if not user:
+        return False
+
+    user.used = 0
+    db.commit()
+    return True
 
 def get_expired_users(db: Session):
     return (

@@ -3,7 +3,7 @@ import { FiCopy } from 'react-icons/fi';
 import ActionsDropdown from './ActionsDropdown';
 import './UserTable.css';
 
-const UserTable = ({ users, onDelete, onDownload, onEdit, onToggleStatus, getSubscriptionLink }) => {
+const UserTable = ({ users, onDelete, onDownload, onEdit, onToggleStatus, onResetUsage, getSubscriptionLink }) => {
   const { t } = useTranslation();
 
   const formatTrafficGB = (bytes) => {
@@ -88,7 +88,7 @@ const UserTable = ({ users, onDelete, onDownload, onEdit, onToggleStatus, getSub
               <tr key={user.name}>
                 <td>{user.name}</td>
                 <td>{new Date(user.expiry_date).toLocaleDateString('en-CA')}</td>
-                <td>{formatTrafficUsage(user.used, user.total)} GB</td>
+                <td>{formatTrafficUsage(user.used, user.total)}</td>
                 <td>
                   <span className={`status-${user.is_active ? 'active' : 'inactive'}`}>
                     {user.is_active ? t('status_active') : t('status_inactive')}
@@ -100,6 +100,11 @@ const UserTable = ({ users, onDelete, onDownload, onEdit, onToggleStatus, getSub
                     actions={[
                       { label: t('editButton'), onClick: () => onEdit(user) },
                       { label: t('downloadButton'), onClick: () => onDownload(user) },
+                      {
+                        label: t('resetUsageButton', 'Reset Usage'),
+                        onClick: () => onResetUsage && onResetUsage(user),
+                        className: 'secondary-action',
+                      },
                       {
                         label: user.is_active ? t('deactivateButton', 'Deactivate') : t('activateButton', 'Activate'),
                         onClick: () => onToggleStatus(user),

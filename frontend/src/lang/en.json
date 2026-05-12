@@ -47,6 +47,7 @@
     "downloadButton": "Download",
     "deleteButton": "Delete",
     "editButton": "Edit",
+    "resetUsageButton": "Reset Usage",
     "downloadConfig": "Get Config",
     "checkStatus": "Check Status",
     "downloadConfigFromNode": "Download Config from",

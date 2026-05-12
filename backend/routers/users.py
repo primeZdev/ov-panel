@@ -46,6 +46,14 @@ async def get_all_users(
     )
 
 
+@router.get("/{uuid}", response_model=ResponseModel)
+async def reset_user_usage(uuid: str, db: Session = Depends(get_db)):
+    reset = crud.reset_user_usage(db, uuid)
+    if not reset:
+        raise HTTPException(status_code=404, detail="User not found")
+    return ResponseModel(success=True, msg="User usage reset successfully", data=None)
+
+
 @router.post("/", response_model=ResponseModel)
 async def create_user(
     request: CreateUser,
