@@ -78,7 +78,8 @@ async def update_user(
     result = crud.update_user(db, uuid, request)
     if result:
         user = crud.get_user_by_uuid(db, uuid)
-        if user.expiry_date >= datetime.today().date() and user.total > user.used:
+        used = user.used or 0
+        if user.expiry_date >= datetime.today().date() and user.total > used:
             await change_user_status_on_all_nodes(uuid, request.name, True, db)
         else:
             await change_user_status_on_all_nodes(uuid, request.name, False, db)

@@ -82,8 +82,9 @@ def update_user(db: Session, uuid: str, request: UpdateUser):
     user = db.query(User).filter(User.uuid == uuid).first()
     if not user:
         raise HTTPException(status_code=404, detail="user not found on database")
-
-    if request.expiry_date >= datetime.today().date() and request.total > user.used:
+    
+    used = user.used or 0
+    if request.expiry_date >= datetime.today().date() and request.total > used:
         user.is_active = True
     else:
         user.is_active = False
