@@ -549,6 +549,19 @@
                 <span class="info-value" id="username">{{ name }}</span>
             </div>
             <div class="info-row">
+                <span class="info-label" id="total-traffic-label">کل ترافیک</span>
+                <span class="info-value">
+                    {{ "%.2f"|format((total or 0) / (1024 ** 3)) }} GB
+                </span>
+            </div>
+
+            <div class="info-row">
+                <span class="info-label" id="used-traffic-label">ترافیک مصرف شده</span>
+                <span class="info-value">
+                    {{ "%.2f"|format((used or 0) / (1024 ** 3)) }} GB
+                </span>
+            </div>
+            <div class="info-row">
                 <span class="info-label" id="expiry-label">تاریخ انقضا</span>
                 <span class="info-value" id="expiry">{{ expiry_date }}</span>
             </div>
@@ -675,6 +688,8 @@
                 fa: {
                     title: "اطلاعات اشتراک شما",
                     username: "نام کاربری",
+                    totalTraffic: "کل ترافیک",
+                    usedTraffic: "ترافیک مصرف شده",
                     expiry: "تاریخ انقضا",
                     active: "فعال",
                     inactive: "غیرفعال",
@@ -688,6 +703,8 @@
                 en: {
                     title: "Subscription Details",
                     username: "Username",
+                    totalTraffic: "Total Traffic",
+                    usedTraffic: "Used Traffic",
                     expiry: "Expiry Date",
                     active: "Active",
                     inactive: "Inactive",
@@ -701,6 +718,8 @@
                 ru: {
                     title: "Детали подписки",
                     username: "Имя пользователя",
+                    totalTraffic: "Общий трафик",
+                    usedTraffic: "Использованный трафик",
                     expiry: "Дата истечения",
                     active: "Активен",
                     inactive: "Неактивен",
@@ -714,6 +733,8 @@
                 zh: {
                     title: "订阅详情",
                     username: "用户名",
+                    totalTraffic: "总流量",
+                    usedTraffic: "已用流量",
                     expiry: "到期日期",
                     active: "有效",
                     inactive: "无效",
@@ -740,6 +761,8 @@
                 const dict = langData[lang];
                 document.getElementById('title').textContent = dict.title;
                 document.getElementById('username-label').textContent = dict.username;
+                document.getElementById('total-traffic-label').textContent = dict.totalTraffic;
+                document.getElementById('used-traffic-label').textContent = dict.usedTraffic;
                 document.getElementById('expiry-label').textContent = dict.expiry;
                 document.getElementById('links-label').textContent = dict.links;
                 const noLinksText = document.getElementById('no-links-text');
