@@ -10,7 +10,7 @@
     <a href="https://primezdev.github.io/ov-doc/" target="_blank">
       <img alt="Get Started" src="https://img.shields.io/badge/Get%20Started-Documentation-brightgreen?style=for-the-badge&logo=readthedocs" />
     </a>
-    <a href="https://t.me/ovpanel" target="_blank">
+    <a href="https://t.me/primezdev" target="_blank">
       <img src="https://img.shields.io/badge/Telegram-Channel-blue?style=for-the-badge&logo=telegram" alt="Telegram Channel">
     </a>
   </p>
