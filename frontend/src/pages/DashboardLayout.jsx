@@ -30,7 +30,7 @@ const DashboardLayout = () => {
             <img src={logoSrc} alt="Panel Logo" className="header-logo" />
           </div>
           <div className="header-actions">
-            <a href="https://t.me/OVPanel" target="_blank" rel="noopener noreferrer" className="action-btn">
+            <a href="https://t.me/primezdev" target="_blank" rel="noopener noreferrer" className="action-btn">
               <FiSend size={18} />
             </a>
             <a href="https://github.com/primeZdev/ov-panel" target="_blank" rel="noopener noreferrer" className="action-btn">
