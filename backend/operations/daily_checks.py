@@ -45,28 +45,31 @@ async def check_user_used_traffic():
 
         for node in nodes:
             try:
+                savepoint = db.begin_nested()
+
                 users = await get_users_used_traffic(node, db=db)
 
                 if not users:
+                    savepoint.rollback()
                     continue
 
                 for username, used_bytes in users.items():
-                    clean_username = username.split("-")[0]
+                    # username format: clientname-nodename, extract clientname
+                    clean_username = username.rsplit("-", 1)[0]
 
                     user = all_users.get(clean_username)
 
                     if not user:
                         logger.warning(f"User not found: {clean_username}")
                         continue
-                    
+
                     last_usage = user.last_node_usage or 0
                     total_used = user.used or 0
 
                     if used_bytes >= last_usage:
                         delta = used_bytes - last_usage
-
-                    # counter reset / reconnect
                     else:
+                        # counter reset / reconnect
                         delta = used_bytes
 
                     user.used = total_used + delta
@@ -74,17 +77,13 @@ async def check_user_used_traffic():
 
                     logger.info(
                         f"[{clean_username}], last={last_usage}, current={used_bytes}, delta={delta} "
-
                     )
 
-                # commit per node
                 db.commit()
-
                 logger.info(f"Traffic data committed for node {node.address}")
 
             except Exception as e:
                 db.rollback()
-
                 logger.error(
                     f"Error while processing node " f"{node.address} -> {e}",
                     exc_info=True,
