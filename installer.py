@@ -34,6 +34,9 @@ def display_panel_info(username, password, port, path):
     server_ip = get_server_ip()
     url = f"http://{server_ip}:{port}/{path}" if path else f"http://{server_ip}:{port}/"
 
+    print(f"\n{Fore.GREEN}Installation Complete!{Style.RESET_ALL}\n")
+    print(f"{Fore.YELLOW}Panel Username: {Fore.CYAN}{username}{Style.RESET_ALL}")
+    print(f"{Fore.YELLOW}Panel Password: {Fore.CYAN}{password}{Style.RESET_ALL}")
     print(f"\n{Fore.CYAN}Access URL: {url}{Style.RESET_ALL}\n")
 
 
