@@ -63,10 +63,10 @@ class NodeRequests:
                 logger.error(
                     f"Failed to get node info on {self.address}: {response.get('msg')}"
                 )
-                return {}
+                return False
         except Exception as e:
             logger.error(f"Error getting node info on {self.address}: {e}")
-            return {}
+            return False
 
     def create_user(self, name: str) -> bool:
         api = f"http://{self.address}/sync/user"
