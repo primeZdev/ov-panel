@@ -4,7 +4,7 @@ import Sidebar from '../components/Sidebar';
 import MobileNav from '../components/MobileNav'; 
 import { useAuth } from '../context/AuthContext';
 import { useTranslation } from 'react-i18next';
-import { FiLogOut, FiRefreshCw, FiGithub, FiSend, FiGlobe, FiAlertCircle, FiExternalLink } from 'react-icons/fi';
+import { FiLogOut, FiRefreshCw, FiGithub, FiSend, FiGlobe, FiAlertCircle, FiExternalLink, FiBook } from 'react-icons/fi';
 import apiClient from '../services/api';
 import ReactMarkdown from 'react-markdown';
 import logoSrc from '../assets/Logo-Landscape-Dark.webp'; 
@@ -65,6 +65,9 @@ const DashboardLayout = () => {
             </a>
             <a href="https://github.com/primeZdev/ov-panel" target="_blank" rel="noopener noreferrer" className="action-btn">
               <FiGithub size={18} />
+            </a>
+            <a href="https://primezdev.github.io/ov-doc/" target="_blank" rel="noopener noreferrer" className="action-btn">
+              <FiBook size={18} />
             </a>
             <button onClick={changeLanguage} className="action-btn">
               <FiGlobe size={18} />
