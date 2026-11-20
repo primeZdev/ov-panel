@@ -37,17 +37,18 @@ const StatCard = ({ icon, label, value, subValue, className, color }) => {
 const ServerStats = () => {
   const [stats, setStats] = useState(null);
   const [nodes, setNodes] = useState([]);
+  const [nodeInfo, setNodeInfo] = useState({});
   const [users, setUsers] = useState([]);
   const { t } = useTranslation();
 
   const nodeStats = useMemo(() => {
-    const activeCount = nodes.filter((node) => node.status).length;
+    const activeCount = nodes.filter((node) => nodeInfo[node.id]?.status === 'active').length;
     return {
       total: nodes.length,
       active: activeCount,
       inactive: nodes.length - activeCount,
     };
-  }, [nodes]);
+  }, [nodes, nodeInfo]);
 
   const userStats = useMemo(() => {
     const activeUsers = users.filter(user => user.is_active).length;
@@ -58,6 +59,35 @@ const ServerStats = () => {
       inactive: inactiveUsers,
     };
   }, [users]);
+
+  useEffect(() => {
+    if (!nodes.length) {
+      setNodeInfo({});
+      return;
+    }
+
+    let intervalId;
+    const fetchAllNodeStatus = async () => {
+      const info = {};
+      await Promise.all(nodes.map(async (node) => {
+        try {
+          const res = await apiClient.get(`/nodes/${node.id}/status/`);
+          info[node.id] = {
+            status: res.data.success && res.data.data?.status === 'active'
+              ? 'active'
+              : 'inactive',
+          };
+        } catch (error) {
+          info[node.id] = { status: 'inactive' };
+        }
+      }));
+      setNodeInfo(info);
+    };
+
+    fetchAllNodeStatus();
+    intervalId = setInterval(fetchAllNodeStatus, 10000);
+    return () => clearInterval(intervalId);
+  }, [nodes]);
 
   useEffect(() => {
     const fetchServerData = async () => {

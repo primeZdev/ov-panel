@@ -37,7 +37,7 @@ const NodeTable = ({ nodes, isLoading, nodeInfo = {}, onDelete, onCheckStatus, o
           ) : (
             nodes.map((node) => {
               const info = nodeInfo[node.id] || {};
-              const isActive = Boolean(node.status && info.status);
+              const isActive = info.status === 'active' || info.status === true;
               return (
                 <tr key={node.id}>
                   <td>{node.name}</td>
