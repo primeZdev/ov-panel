@@ -1,5 +1,3 @@
-import os
-
 version = (
     open("pyproject.toml", "r", encoding="utf-8")
     .read()
