@@ -47,3 +47,11 @@ class Admins(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class VersionCheck(BaseModel):
+    current_version: str
+    latest_version: str
+    update_available: bool
+    release_url: str
+    release_notes: str

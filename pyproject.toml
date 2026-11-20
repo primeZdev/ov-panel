@@ -22,4 +22,5 @@ dependencies = [
     "python-multipart",
     "apscheduler",
     "colorama",
+    "httpx",
 ]
