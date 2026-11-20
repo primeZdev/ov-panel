@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import LoadingButton from './LoadingButton';
 
 const EditUserModal = ({ user, onClose, onUserUpdated }) => {
-  const [expiryDate, setExpiryDate] = useState('');
+  const [expiryInput, setExpiryInput] = useState('');
   const [totalTraffic, setTotalTraffic] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -24,11 +24,23 @@ const EditUserModal = ({ user, onClose, onUserUpdated }) => {
     return parseFloat(gb.toFixed(2)).toString().replace(/\.00$/, '');
   };
 
+  const parseExpiryInput = (input) => {
+    const trimmed = input?.toString().trim();
+    if (!trimmed) return null;
+    const asNumber = parseInt(trimmed, 10);
+    if (!Number.isNaN(asNumber) && trimmed === asNumber.toString()) {
+      const date = new Date();
+      date.setDate(date.getDate() + asNumber);
+      return date.toISOString().split('T')[0];
+    }
+    return trimmed;
+  };
+
   useEffect(() => {
     if (user && user.expiry_date) {
       const date = new Date(user.expiry_date);
       const formattedDate = date.toISOString().split('T')[0];
-      setExpiryDate(formattedDate);
+      setExpiryInput(formattedDate);
     }
     if (user) {
       setTotalTraffic(gbFromBytes(user.total));
@@ -40,6 +52,12 @@ const EditUserModal = ({ user, onClose, onUserUpdated }) => {
     setError('');
     setIsLoading(true);
 
+    const expiryDate = parseExpiryInput(expiryInput);
+    if (!expiryDate) {
+      setError('Expiry date is required');
+      setIsLoading(false);
+      return;
+    }
 
     const payload = {
       name: user.name,
@@ -84,12 +102,14 @@ const EditUserModal = ({ user, onClose, onUserUpdated }) => {
           <div className="input-group">
             <label htmlFor="edit-user-expiry">{t('modal_expiryDate')}</label>
             <input
-              type="date"
+              type="text"
               id="edit-user-expiry"
-              value={expiryDate}
-              onChange={(e) => setExpiryDate(e.target.value)}
+              value={expiryInput}
+              onChange={(e) => setExpiryInput(e.target.value)}
               required
+              placeholder={t('modal_expiryPlaceholder')}
             />
+            <small className="input-hint">{t('modal_expiryHint')}</small>
           </div>
           <div className="input-group">
             <label htmlFor="edit-user-total">{t('modal_totalTraffic')}</label>

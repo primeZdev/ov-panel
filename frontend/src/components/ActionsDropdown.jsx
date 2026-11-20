@@ -21,8 +21,14 @@ const ActionsDropdown = ({ actions }) => {
   }, []);
 
   return (
-    <div className="actions-dropdown-container" ref={dropdownRef}>
-      <button onClick={toggleDropdown} className="actions-dropdown-trigger">
+    <div className={`actions-dropdown-container ${isOpen ? 'is-open' : ''}`} ref={dropdownRef}>
+      <button
+        type="button"
+        onClick={toggleDropdown}
+        className="actions-dropdown-trigger"
+        aria-expanded={isOpen}
+        aria-haspopup="menu"
+      >
         <FiMoreVertical size={20} />
       </button>
       {isOpen && (

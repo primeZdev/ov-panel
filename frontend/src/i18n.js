@@ -13,16 +13,35 @@ const resources = {
   },
 };
 
+const savedLanguage = localStorage.getItem('language');
+const initialLanguage = savedLanguage === 'fa' || savedLanguage === 'en'
+  ? savedLanguage
+  : 'en';
+
+const applyDocumentLanguage = (language) => {
+  const normalizedLanguage = language === 'fa' ? 'fa' : 'en';
+  document.documentElement.lang = normalizedLanguage;
+  document.documentElement.dir = normalizedLanguage === 'fa' ? 'rtl' : 'ltr';
+};
+
 i18n
   .use(initReactI18next)
   .init({
     resources,
-    lng: 'en', 
-    fallbackLng: 'en', 
+    lng: initialLanguage,
+    fallbackLng: 'en',
 
     interpolation: {
-      escapeValue: false, 
+      escapeValue: false,
     },
   });
+
+i18n.on('languageChanged', (language) => {
+  const normalizedLanguage = language === 'fa' ? 'fa' : 'en';
+  localStorage.setItem('language', normalizedLanguage);
+  applyDocumentLanguage(normalizedLanguage);
+});
+
+applyDocumentLanguage(initialLanguage);
 
 export default i18n;

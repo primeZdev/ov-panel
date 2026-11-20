@@ -50,10 +50,17 @@ const NodeManagement = () => {
       await Promise.all(nodes.map(async (node) => {
         try {
           const res = await apiClient.get(`/nodes/${node.id}/status/`);
-          if (res.data.success && res.data.data && res.data.data.node_info) {
-            info[node.id] = res.data.data.node_info;
+          if (res.data.success && res.data.data) {
+            info[node.id] = {
+              ...(res.data.data.node_info || {}),
+              status: res.data.data.status || 'inactive',
+            };
+          } else {
+            info[node.id] = { status: 'inactive' };
           }
-        } catch (e) { }
+        } catch (e) {
+          info[node.id] = { status: 'inactive' };
+        }
       }));
       setNodeInfo(info);
     };
@@ -63,13 +70,13 @@ const NodeManagement = () => {
   }, [nodes]);
 
   const nodeStats = useMemo(() => {
-    const activeCount = nodes.filter((node) => node.status).length;
+    const activeCount = nodes.filter((node) => nodeInfo[node.id]?.status === 'active').length;
     return {
       total: nodes.length,
       active: activeCount,
       inactive: nodes.length - activeCount,
     };
-  }, [nodes]);
+  }, [nodes, nodeInfo]);
 
 
   const filteredNodes = useMemo(() => {

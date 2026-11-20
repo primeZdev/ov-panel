@@ -60,6 +60,8 @@
     "modal_expiryDate": "Expiry Date",
     "modal_totalTraffic": "Total Traffic (GB)",
     "modal_totalTrafficPlaceholder": "Enter total traffic in GB",
+    "modal_expiryPlaceholder": "Enter date (YYYY-MM-DD) or days (e.g., 30)",
+    "modal_expiryHint": "Enter a date or number of days from now",
     "modal_createNodeTitle": "Create New Node",
     "cancelButton": "Cancel",
     "createUserButton": "Create User",
@@ -98,5 +100,11 @@
     "deleteAdminConfirm": "Are you sure you want to delete admin",
     "adminDeletedSuccess": "Admin deleted successfully.",
     "unableToDeleteAdmin": "Unable to delete admin.",
-    "errorDeletingAdmin": "An error occurred while deleting the admin."
+    "errorDeletingAdmin": "An error occurred while deleting the admin.",
+    "updateAvailable": "Update Available",
+    "currentVersion": "Current version",
+    "latestVersion": "Latest version",
+    "releaseNotes": "Release Notes",
+    "dismiss": "Dismiss",
+    "viewRelease": "View Release"
 }

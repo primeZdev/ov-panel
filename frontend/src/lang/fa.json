@@ -60,6 +60,8 @@
     "modal_expiryDate": "تاریخ انقضا",
     "modal_totalTraffic": "کل ترافیک (گیگابایت)",
     "modal_totalTrafficPlaceholder": "ترافیک را به گیگابایت وارد کنید",
+    "modal_expiryPlaceholder": "تاریخ (YYYY-MM-DD) یا روزها (مثلا 30) را وارد کنید",
+    "modal_expiryHint": "یک تاریخ یا تعداد روز از امروز وارد کنید",
     "modal_createNodeTitle": "ایجاد نود جدید",
     "cancelButton": "انصراف",
     "createUserButton": "ایجاد کاربر",
@@ -98,5 +100,11 @@
     "deleteAdminConfirm": "آیا از حذف ادمین مطمئن هستید؟",
     "adminDeletedSuccess": "ادمین با موفقیت حذف شد.",
     "unableToDeleteAdmin": "حذف ادمین ممکن نیست.",
-    "errorDeletingAdmin": "خطایی در حذف ادمین رخ داد."
+    "errorDeletingAdmin": "خطایی در حذف ادمین رخ داد.",
+    "updateAvailable": "به‌روزرسانی موجود است",
+    "currentVersion": "نسخه فعلی",
+    "latestVersion": "نسخه جدید",
+    "releaseNotes": "یادداشت‌های انتشار",
+    "dismiss": "بازگشت",
+    "viewRelease": "مشاهده انتشار"
 }
