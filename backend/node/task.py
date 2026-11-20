@@ -82,12 +82,12 @@ async def get_node_status_handler(node_id: int, db: Session):
         node_status = NodeRequests(
             address=node.address, port=node.port, api_key=node.key
         ).get_node_info()
-        print(node_status)
         if not node_status:
-            return None, {
+            return {
                 "address": node.address,
                 "port": node.port,
                 "status": "inactive",
+                "node_info": {},
             }
         return {
             "address": node.address,
