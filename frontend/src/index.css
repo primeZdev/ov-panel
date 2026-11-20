@@ -1,5 +1,14 @@
 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap');
 
+@font-face {
+  font-family: 'Dastkhat Bar';
+  src: url('./assets/fonts/DastkhatBar-Variable.woff2') format('woff2-variations'),
+    url('./assets/fonts/DastkhatBar-Variable.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* --- 🎨 NEW COLOR PALETTE: Black & Orange --- */
 :root {
   --font-family: 'Nunito', sans-serif;
@@ -29,6 +38,10 @@
   --danger-color: #a63d2a;
   --success-color: #01c3a8;
   --info-color: #1890ff;
+}
+
+html[lang='fa'] {
+  --font-family: 'Dastkhat Bar', 'Tahoma', sans-serif;
 }
 
 /* --- Global Styles --- */
