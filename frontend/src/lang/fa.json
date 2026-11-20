@@ -100,5 +100,11 @@
     "deleteAdminConfirm": "آیا از حذف ادمین مطمئن هستید؟",
     "adminDeletedSuccess": "ادمین با موفقیت حذف شد.",
     "unableToDeleteAdmin": "حذف ادمین ممکن نیست.",
-    "errorDeletingAdmin": "خطایی در حذف ادمین رخ داد."
+    "errorDeletingAdmin": "خطایی در حذف ادمین رخ داد.",
+    "updateAvailable": "به‌روزرسانی موجود است",
+    "currentVersion": "نسخه فعلی",
+    "latestVersion": "نسخه جدید",
+    "releaseNotes": "یادداشت‌های انتشار",
+    "dismiss": "بازگشت",
+    "viewRelease": "مشاهده انتشار"
 }

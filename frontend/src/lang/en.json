@@ -100,5 +100,11 @@
     "deleteAdminConfirm": "Are you sure you want to delete admin",
     "adminDeletedSuccess": "Admin deleted successfully.",
     "unableToDeleteAdmin": "Unable to delete admin.",
-    "errorDeletingAdmin": "An error occurred while deleting the admin."
+    "errorDeletingAdmin": "An error occurred while deleting the admin.",
+    "updateAvailable": "Update Available",
+    "currentVersion": "Current version",
+    "latestVersion": "Latest version",
+    "releaseNotes": "Release Notes",
+    "dismiss": "Dismiss",
+    "viewRelease": "View Release"
 }
